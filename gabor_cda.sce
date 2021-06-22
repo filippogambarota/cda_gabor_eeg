@@ -97,16 +97,22 @@ trial {
 	duration = 1246; # ~1500 ms - ifi/2 (@slack approach psychtoolbox)
 	code = "retention";
 	
-	picture probe;
-	time = 2629;
-	duration = 1996; # ~2000 ms - ifi/2 (@slack approach psychtoolbox)
-	code = "probe";
+	stimulus_event{
+		picture probe;
+		time = 2629;
+		duration = 1996; # ~2000 ms - ifi/2 (@slack approach psychtoolbox)
+		response_active = true;
+		code = "probe";
+	} probe_event;
 	
-	picture pas;
-	time = 4629;
-	duration = 1996; # ~2000 ms - ifi/2 (@slack approach psychtoolbox)
-	code = "pas";
-	
+	stimulus_event{
+		picture pas;
+		time = 4629;
+		duration = 1996; # ~2000 ms - ifi/2 (@slack approach psychtoolbox),
+		response_active = true;
+		code = "pas";
+	} pas_event;
+
 } main_trial;
 
 begin_pcl;
