@@ -1,5 +1,53 @@
+# Get number of trials
+
+sub
+   int get_trial_number(string path, int ncond)
+begin
+	int ntrials = 0;
+	input_file condfile = new input_file;
+	condfile.open(path);
+	condfile.set_delimiter(',');
+	loop until condfile.end_of_file()
+	begin
+		loop int cond = 1 until cond > ncond
+		begin
+			condfile.get_line();
+			cond = cond + 1;
+		end;
+		ntrials = ntrials + 1;
+	end;
+	condfile.close();
+	return ntrials
+end;
+
 # Read Condition File
 
+sub
+   array <string, 2> get_trial_array(string path, int ncond, int ntrials)
+begin
+	input_file condfile = new input_file;
+	condfile.open(path);
+	condfile.set_delimiter(',');
+
+	array <string> TRIALS[ntrials][ncond];
+
+	loop int i = 1 until condfile.end_of_file()
+		begin
+		array <string> TEMP[0];
+		loop int cond = 1 until cond > ncond
+			begin
+				TEMP.add(condfile.get_line());
+				cond = cond + 1;
+			end;
+		TRIALS[i] = TEMP;
+		i = i + 1;
+	end;
+	condfile.close();
+	return TRIALS
+end;
+
+
+/* # Old version
 sub
    array <string, 2> get_trial_array(string path, int ncond, int ntrials)
 begin
@@ -22,6 +70,8 @@ begin
 	end;
 	return TRIALS
 end;
+
+*/
 
 # Generate trial id
 
