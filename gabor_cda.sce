@@ -1,4 +1,8 @@
+####### EXPERIMENT GENERAL SETTINGS #########
+
 default_background_color = 127, 127, 127; # grey color
+
+active_buttons = 2; # the number is the number of activated input buttons (i.e. keys)
 
 begin;
 
@@ -70,7 +74,9 @@ picture {
 }pas;
 
 trial {
-	#trial_duration = 5000;
+	#max_responses = 2;
+	#trial_type = nth_response;
+	trial_duration = 8636; # this is the full duration - 4ms (ifi/2)
 	
 	picture fix;
 	time = 0;
@@ -94,26 +100,28 @@ trial {
 	
 	picture fix;
 	time = 1379;
-	duration = 1246; # ~1500 ms - ifi/2 (@slack approach psychtoolbox)
+	duration = 1246; # ~1250 ms - ifi/2 (@slack approach psychtoolbox)
 	code = "retention";
 	
 	stimulus_event{
 		picture probe;
 		time = 2629;
-		duration = 1996; # ~2000 ms - ifi/2 (@slack approach psychtoolbox)
+		duration = 2996; # ~3000 ms - ifi/2 (@slack approach psychtoolbox)
 		response_active = true;
 		code = "probe";
 	} probe_event;
 	
 	stimulus_event{
 		picture pas;
-		time = 4629;
-		duration = 1996; # ~2000 ms - ifi/2 (@slack approach psychtoolbox),
+		time = 5629;
+		duration = 2996; # ~3000 ms - ifi/2 (@slack approach psychtoolbox),
 		response_active = true;
 		code = "pas";
 	} pas_event;
 
-} main_trial;
+} T_fixation;
+
+
 
 begin_pcl;
 
@@ -178,5 +186,7 @@ begin;
 	
 	# Running Trials
 	main_trial.present(); # present trials
+	
 	trial_i = trial_i + 1; # counter
+	
 end;
