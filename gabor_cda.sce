@@ -186,12 +186,12 @@ begin_pcl;
 
 include "utils.pcl" # utility functions
 string cond_file = "make_cond/exp_cond.txt"; # the condition file
-int ntrials = 128; # number of trials
 int ncond = 4; # number of conditions (columns)
 int n_ori = gabor_images.count();
 int pause_trial = 5;
 
-array<string> TRIALS[ncond][ntrials] = get_trial_array(cond_file, ncond, ntrials);
+int ntrials = get_trial_number(cond_file, ncond);
+array<string> TRIALS[ntrials][ncond] = get_trial_array(cond_file, ncond, ntrials);
 
 int CUE = 1;
 int ORIS = 2;
@@ -213,7 +213,7 @@ begin;
 	
 	# Setting cue
 	
-	if (TRIALS[CUE][curr_trial] == "left") then
+	if (TRIALS[curr_trial][CUE] == "left") then
 		# setting the cue direction
 		P_cue.set_part(2, cue_left); 
 		P_cue.set_part(3, cue_left);
@@ -225,12 +225,12 @@ begin;
 	
 	# Gabor and Probe (double conditional valid/non valid e change non change)
 	
-	if (TRIALS[TRIAL_TYPE][curr_trial] == "valid") then
-		int trial_ori = int(TRIALS[ORIS][curr_trial]); # select the image (orientation) for that trial
+	if (TRIALS[curr_trial][TRIAL_TYPE] == "valid") then
+		int trial_ori = int(TRIALS[curr_trial][ORIS]); # select the image (orientation) for that trial
 		P_gabor.set_part(1, gabor_images[trial_ori]); # set the image (right)
 		P_gabor.set_part(2, gabor_images[trial_ori]); # set the image (left)
 		
-		if (TRIALS[CHANGE][curr_trial] == "yes") then
+		if (TRIALS[curr_trial][CHANGE] == "yes") then
 			int probe_ori = generate_probe_ori(1, n_ori, trial_ori); # generate a random id that is not the same as the $trial_ori
 			P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
 		else
