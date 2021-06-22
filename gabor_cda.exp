@@ -1,5 +1,5 @@
 <ver>22.1</ver>
-<efn>C:\Users\user\Google Drive\PhD\Research Projects\Roy Lab\test_presentation\gabor_cda.exp</efn>
+<efn>C:\Users\user\Google Drive\PhD\Research Projects\Roy Lab\gabor_cda\gabor_cda.exp</efn>
 <author>Filippo</author>
 <con>
 <pause>P</pause>
@@ -41,10 +41,13 @@
 <lfn></lfn>
 </docs>
 <dp_list></dp_list>
-<dsd>C:\Users\user\Google Drive\PhD\Research Projects\Roy Lab\test_presentation\</dsd>
+<dsd>C:\Users\user\Google Drive\PhD\Research Projects\Roy Lab\gabor_cda\stimuli</dsd>
 <dwm>0</dwm>
 <dxv>8</dxv>
-<efs></efs>
+<efs>
+<filename>C:\Users\user\Google Drive\PhD\Research Projects\Roy Lab\gabor_cda\gabor_cda.sce</filename>
+<filename>C:\Users\user\Google Drive\PhD\Research Projects\Roy Lab\gabor_cda\utils.pcl</filename>
+</efs>
 <exclusive_mouse>1</exclusive_mouse>
 <exp_version></exp_version>
 <exparam>
@@ -79,7 +82,11 @@
 <ssl></ssl>
 </parms>
 <pass></pass>
-<ssa></ssa>
+<ssa>
+<asn>
+<sid>-1</sid>
+</asn>
+</ssa>
 </man>
 </exparam>
 <experiment_id>{8F90C68B-EACD-4500-A733-66FE38777DB9}</experiment_id>
@@ -91,7 +98,9 @@
 </font_settings>
 <ftp>
 <ccc>0</ccc>
-<do_upload></do_upload>
+<do_upload>
+<sce>1</sce>
+</do_upload>
 <host></host>
 <id>{7BC8D6C1-D572-45E2-A6BB-F58179DFCC7B}</id>
 <idle_timeout>0</idle_timeout>
@@ -112,7 +121,7 @@
 <idt>0</idt>
 <ilc>0</ilc>
 <ip_chans></ip_chans>
-<lfd>C:\Users\user\Google Drive\PhD\Research Projects\Roy Lab\test_presentation\logfiles</lfd>
+<lfd>C:\Users\user\Google Drive\PhD\Research Projects\Roy Lab\gabor_cda\logfiles</lfd>
 <lnb>2</lnb>
 <lno>4</lno>
 <log>
@@ -123,7 +132,7 @@
 <meta>1</meta>
 <pien>0</pien>
 <set_def_file></set_def_file>
-<stimulus_list>0</stimulus_list>
+<stimulus_list>1</stimulus_list>
 <subject_id></subject_id>
 <subject_id_pol>0</subject_id_pol>
 <video_list>0</video_list>
@@ -582,6 +591,29 @@
 <sce>
 <overrides></overrides>
 <sfn>all_scenarios</sfn>
+</sce>
+<sce>
+<abd>
+<device_type>2</device_type>
+<dx_device_type>18</dx_device_type>
+<ibn>Button 0</ibn>
+<ibn>Button 1</ibn>
+<idn>Mouse</idn>
+<index>0</index>
+<index>1</index>
+<label>left_mouse</label>
+<label>right_mouse</label>
+<offset>12</offset>
+<offset>13</offset>
+<unique_id>0</unique_id>
+</abd>
+<mse>
+<device_type>2</device_type>
+<dx_device_type>18</dx_device_type>
+<name>Mouse</name>
+</mse>
+<overrides></overrides>
+<sfn>C:\Users\user\Google Drive\PhD\Research Projects\Roy Lab\gabor_cda\gabor_cda.sce</sfn>
 </sce>
 <sct>
 <capture_device>
