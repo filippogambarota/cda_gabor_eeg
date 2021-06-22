@@ -26,9 +26,14 @@ catch_trials <- expand_grid(
 )
 
 exp_trials <- rbind(valid_trials, catch_trials)
+exp_trials$trial <- 1:nrow(exp_trials)
 
 exp_trials %>% 
     select(-trial) %>% 
-    write.table(., file = "exp_cond.txt", sep = "\n", col.names = FALSE, row.names = FALSE, fileEncoding = "UTF8", quote = FALSE)
-
-
+    write.table(., file = "exp_cond.txt",
+                sep = ",", # separator
+                eol = ",", # for having all in a single line sep
+                col.names = FALSE, 
+                row.names = FALSE, 
+                fileEncoding = "UTF8", 
+                quote = FALSE) # for presentation string
