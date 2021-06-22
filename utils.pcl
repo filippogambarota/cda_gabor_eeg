@@ -1,0 +1,68 @@
+# Read Condition File
+
+sub
+   array <string, 2> get_trial_array(string path, int ncond, int ntrials)
+begin
+	input_file InputFile = new input_file;
+
+	InputFile.open(path);
+	
+	array<string> TRIALS[ncond][ntrials];
+	
+	loop int id_trial = 1
+	until id_trial > ntrials
+	begin;
+		loop int cond = 1
+		until cond > ncond
+		begin;
+			TRIALS[cond][id_trial] = InputFile.get_line();
+			cond = cond + 1;
+		end;
+		id_trial = id_trial + 1;
+	end;
+	return TRIALS
+end;
+
+# Generate trial id
+
+sub
+	array <int, 1> generate_trial_id(int ntrials)
+begin
+	array <int> trial_id[0];
+	loop int i = 1 until i > ntrials
+	begin
+		trial_id.add(i);
+		i = i + 1;
+	end;
+	return trial_id
+end;
+
+# array for probe
+
+sub
+	array <int,1> generate_oris_array_probe(int from, int to, int trial_ori)
+begin
+	array <int> oris[0];
+	loop int i = 1 until i > 7
+	begin
+		if (i != trial_ori) then
+			oris.add(i);
+		end;
+		i = i + 1;
+	end;
+	return oris;
+end;
+
+# sample with condition
+
+sub
+	int generate_probe_ori(int from, int to, int trial_ori)
+begin
+	int probe_ori = 0;
+	loop int i = trial_ori until i != trial_ori
+	begin
+		i = random(from, to);
+		probe_ori = i;
+	end;
+	return probe_ori;
+end;

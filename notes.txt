@@ -1,0 +1,5 @@
+# TODO
+
+* better way to handle conditions
+* block organization
+* timing
