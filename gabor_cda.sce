@@ -36,7 +36,8 @@ default_text_color = 255,255,255; # text to black default
 
 /* Response setup */
 
-active_buttons = 2; # the number is the number of activated input buttons (i.e. keys)
+active_buttons = 7; # the number is the number of activated input buttons (i.e. keys)
+button_codes = 11, 12, 13, 14, 20, 29, 99; # these are codes for triggers associated with each button
 
 ### STARTING SDL
 
@@ -223,28 +224,30 @@ trial {
 
 trial {
 	trial_duration = forever; # stay forever until response
-	trial_type = first_response; # this ends the trial after the first response
+	trial_type = specific_response;    	# trial ends when response
+   terminator_button = 5,6;
 	
 	stimulus_event {
 		picture P_probe;
 		code = "probe";
-		response_active = true;
+		response_active = true; # this is a target response active event
 	} E_probe;
 } T_probe;
 
 trial {
 	trial_duration = forever; # stay forever until response
-	trial_type = first_response; # this ends the trial after the first response
-	
+	trial_type = specific_response;    	# trial ends when response
+   terminator_button = 1,2,3,4;
+
 	stimulus_event {
 		picture P_pas;
-		response_active = true;
+		response_active = true; # this is a non-target response active event
 		code = "pas";
 	} E_pas;
 } T_pas;
 
 
-### STARTING SDL
+### STARTING PCL
 
 begin_pcl;
 
@@ -289,6 +292,16 @@ int CHANGE = 4; # if the probe gabor is the same or different
 int n_ori = gabor_images.count(); # number of orientations
 int pause_trial = 5; # number of trials for the pause
 
+/* Response Keys Settings */
+
+int pas1_key = 1;
+int pas2_key = 2;
+int pas3_key = 3;
+int pas4_key = 4;
+int change_key = 5;
+int nochange_key = 6;
+int continue_key = 7;
+
 /* Trials setup */
 
 /* # Previous approach
@@ -328,6 +341,19 @@ begin;
 
 	array <string> TRIAL_i[ncond] = TRIALS[trial_count]; # get the current trial as array
 	
+	/* Setting TRIGGERS */
+	
+	# These are triggers that can be set before
+	
+	/*
+	E_fixation.set_port_code();
+	E_gabor.set_port_code();
+	E_mask.set_port_code();
+	E_retention.set_port_code();
+	E_probe.set_port_code();
+	E_pas.set_port_code();
+	*/
+	
 	/* Setting CUE */
 	
 	if (TRIAL_i[CUE] == "left") then
@@ -351,9 +377,12 @@ begin;
 		if (TRIAL_i[CHANGE] == "yes") then /* Check if PROBE CHANGE */
 			int probe_ori = generate_different_ori(1, n_ori, trial_ori); # generate a random id that is not the same as the $trial_ori
 			P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
+			E_probe.set_target_button(change_key); # this set the correct answer and key for that trial
 		else
 			int probe_ori = trial_ori;
+			E_probe.set_target_button(nochange_key); # this set the correct answer and key for that trial
 			P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
+			
 		end;
 		
 	else

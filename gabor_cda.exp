@@ -121,7 +121,7 @@
 <idt>0</idt>
 <ilc>0</ilc>
 <ip_chans></ip_chans>
-<lfd>C:\Users\user\Google Drive\PhD\Research Projects\Roy Lab\gabor_cda\logfiles</lfd>
+<lfd>C:\Users\user\Google Drive\PhD\Research Projects\Roy Lab\gabor_cda\results</lfd>
 <lnb>2</lnb>
 <lno>4</lno>
 <log>
@@ -236,6 +236,17 @@
 <unique_id>0</unique_id>
 </device>
 <device>
+<device_type>3</device_type>
+<dx_device_type>19</dx_device_type>
+<name>Keyboard</name>
+<unique_id>1</unique_id>
+</device>
+<device>
+<device_type>3</device_type>
+<dx_device_type>0</dx_device_type>
+<name>HID Keyboard Device</name>
+</device>
+<device>
 <abs_axis>
 <dead_zone>0</dead_zone>
 <max>1000</max>
@@ -276,6 +287,16 @@
 <max_raw_pos>65535</max_raw_pos>
 <min_raw_pos>0</min_raw_pos>
 <name>HID-compliant mouse</name>
+</device>
+<device>
+<device_type>4</device_type>
+<dx_device_type>17</dx_device_type>
+<name>USB Keyboard</name>
+</device>
+<device>
+<device_type>4</device_type>
+<dx_device_type>17</dx_device_type>
+<name>USB Keyboard 1</name>
 </device>
 <device>
 <axis>
