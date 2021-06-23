@@ -77,3 +77,5 @@ codegen/
 octave-workspace
 
 testing_presentation.sce
+
+results/
