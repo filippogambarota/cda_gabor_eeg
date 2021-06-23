@@ -1,4 +1,11 @@
-# Get number of trials
+/* UTILS FUNCTION FOR THE MAIN EXPERIMENT */
+
+
+/* get_trial_number */
+
+# This function read the file and increase a counter
+# and return the trials number. This is used to read
+# the same file later
 
 sub
    int get_trial_number(string path, int ncond)
@@ -20,10 +27,14 @@ begin
 	return ntrials
 end;
 
-# Read Condition File
+/* get_trial_2Darray */
+
+# This function read the file and store each trial in a 2D array
+# where the first element index the trial number and the second
+# element index the condition.
 
 sub
-   array <string, 2> get_trial_array(string path, int ncond, int ntrials)
+   array <string, 2> get_trial_2Darray(string path, int ncond, int ntrials)
 begin
 	input_file condfile = new input_file;
 	condfile.open(path);
@@ -46,34 +57,10 @@ begin
 	return TRIALS
 end;
 
+/* generate_trial_id */ # DEPRECATED
 
-/* # Old version
-sub
-   array <string, 2> get_trial_array(string path, int ncond, int ntrials)
-begin
-	input_file InputFile = new input_file;
-
-	InputFile.open(path);
-	
-	array<string> TRIALS[ncond][ntrials];
-	
-	loop int id_trial = 1
-	until id_trial > ntrials
-	begin;
-		loop int cond = 1
-		until cond > ncond
-		begin;
-			TRIALS[cond][id_trial] = InputFile.get_line();
-			cond = cond + 1;
-		end;
-		id_trial = id_trial + 1;
-	end;
-	return TRIALS
-end;
-
-*/
-
-# Generate trial id
+# This function create a simple array from 1 to ntrials
+# for the trial randomization.
 
 sub
 	array <int, 1> generate_trial_id(int ntrials)
@@ -87,7 +74,11 @@ begin
 	return trial_id
 end;
 
-# array for probe
+/* generate_oris_array_probe */ # DEPRECATED
+
+# This function create an array from to without a specific
+# number. Used to create an array from which sample the probe
+# orientation for change trials
 
 sub
 	array <int,1> generate_oris_array_probe(int from, int to, int trial_ori)
@@ -103,10 +94,14 @@ begin
 	return oris;
 end;
 
-# sample with condition
+/* generate_different_ori */ # DEPRECATED
+
+# This function return a random number from to without
+# without a specific number (used for the memory)
+# (more easy and efficient that the previous version)
 
 sub
-	int generate_probe_ori(int from, int to, int trial_ori)
+	int generate_different_ori(int from, int to, int trial_ori)
 begin
 	int probe_ori = 0;
 	loop int i = trial_ori until i != trial_ori
