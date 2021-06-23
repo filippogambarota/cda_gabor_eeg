@@ -142,6 +142,33 @@ picture {
 
 /* Trials objects */
 
+#start recording trial
+
+trial { #start recording trial - send a code to make biosemi start recode (254)
+	stimulus_event {
+		picture {
+		text {caption = " ";}; x = 0; y = 0;
+		};
+		deltat=200;
+		duration=50;
+		};
+	stimulus_event {
+		picture {
+		text {caption = " ";}; x = 0; y = 0;
+		};
+		deltat=50;
+		duration=200;
+		port_code = 254; # code for triggering the registration start
+		}start_recording;
+	stimulus_event {
+		picture {
+		text {caption = " ";}; x = 0; y = 0;
+		};
+		deltat=200;
+		duration=50;
+	};
+}T_start_recording; #there is no need for a stop recording code, you just stop biosemy
+
 trial {
 	trial_duration = forever;
 	trial_type = first_response; # this ends the trial after the first response
@@ -221,6 +248,18 @@ trial {
 
 begin_pcl;
 
+/* User Prompt */
+
+preset int Participant;
+preset string Gender;
+preset int Age;
+
+/* Creating Output File */
+
+output_file outfile = new output_file;
+outfile.open("s" + string(Participant) + ".txt"); 
+outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ change" + "\n");   # this create a space separated header
+
 /* Importing functions */
 
 include "utils.pcl" # this import utility functions
@@ -257,11 +296,13 @@ array <int> TRIALS_ORDER[ntrials] = generate_trial_id(ntrials); # this generate 
 TRIALS_ORDER.shuffle(); # this shuffle the array in order to have a random index fot TRIALS[TRIAL_ID[i]][]
 */
 
+
 ##############################################################################################################
 ##############################################################################################################
 ##############################################################################################################
 
 ### STARTING THE EXPERIMENT
+
 
 /* Trials Randomization */
 
@@ -276,7 +317,13 @@ P_message.set_part(1, TXT_welcome); # welcome message that use the txt object an
 
 T_message.present();
 
-loop int trial_count = 1 until trial_count > TRIALS.count() /* Experiment loop */
+/* Start Recording */
+
+T_start_recording.present();
+
+/* Experiment loop */
+
+loop int trial_count = 1 until trial_count > TRIALS.count() 
 begin;
 
 	array <string> TRIAL_i[ncond] = TRIALS[trial_count]; # get the current trial as array
@@ -334,6 +381,10 @@ begin;
 	T_probe.present();
 	T_pas.present();
 	
+	/* Saving Data */
+	
+	outfile.print(string(Participant) + " " + string(Age) + " " + Gender + " " + TRIAL_i[CUE] + " " + TRIAL_i[ORIS] + " " + TRIAL_i[TRIAL_TYPE] + " " + TRIAL_i[CHANGE] + "\n");
+		
 	/* Trial counter */
 	trial_count = trial_count + 1;
 	
