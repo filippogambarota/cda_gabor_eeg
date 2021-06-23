@@ -1,5 +1,5 @@
-/* ########################## SPCN GABOR EXPERIMENT  ############################ /*
-#################################################################################
+/* ########################## SPCN GABOR EXPERIMENT  ############################ */
+/* ############################################################################## */
 
 /*
 
@@ -172,7 +172,9 @@ trial { #start recording trial - send a code to make biosemi start recode (254)
 
 trial {
 	trial_duration = forever;
-	trial_type = first_response; # this ends the trial after the first response
+	trial_type = specific_response;    	# trial ends when response
+   terminator_button = 7; # ends only with space
+
 	picture P_message;
 } T_message;
 
@@ -201,14 +203,15 @@ trial {
 	stimulus_event {
 		picture P_gabor;
 		code = "gabor";
-		time = 0;
+		#time = 0;
+		deltat = 0;
 		duration = 29; # ~33ms - ifi/2
 	} E_gabor;
 	
 	stimulus_event {
 		picture P_mask;
 		code = "backward_mask";
-		time = 29; # check this
+		deltat = 29;
 		duration = 346; # ~350ms - ifi/2
 	} E_mask;
 	
@@ -261,7 +264,7 @@ preset int Age;
 
 output_file outfile = new output_file;
 outfile.open("s" + string(Participant) + ".txt"); 
-outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ change" + "\n");   # this create a space separated header
+outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ change\ target_type\ hit\ incorrect" + "\n");   # this create a space separated header
 
 /* Importing functions */
 
@@ -291,6 +294,7 @@ int CHANGE = 4; # if the probe gabor is the same or different
 
 int n_ori = gabor_images.count(); # number of orientations
 int pause_trial = 5; # number of trials for the pause
+int acc = 0;
 
 /* Response Keys Settings */
 
@@ -382,7 +386,6 @@ begin;
 			int probe_ori = trial_ori;
 			E_probe.set_target_button(nochange_key); # this set the correct answer and key for that trial
 			P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
-			
 		end;
 		
 	else
@@ -408,11 +411,21 @@ begin;
 	T_target_mask.present();
 	T_retention.present();
 	T_probe.present();
+		
+	stimulus_data target = stimulus_manager.last_stimulus_data();
+	int cdt_rt = target.reaction_time();
+	int target_type = target.type();
+	int hit = target.HIT;
+	int incorrect = target.INCORRECT;
+	
 	T_pas.present();
 	
 	/* Saving Data */
 	
-	outfile.print(string(Participant) + " " + string(Age) + " " + Gender + " " + TRIAL_i[CUE] + " " + TRIAL_i[ORIS] + " " + TRIAL_i[TRIAL_TYPE] + " " + TRIAL_i[CHANGE] + "\n");
+	outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ change\ target_type\ hit\ incorrect" + "\n");   # this create a space separated header
+
+	outfile.print(string(Participant) + " " + string(Age) + " " + Gender + " " + TRIAL_i[CUE] + " " + TRIAL_i[ORIS] + " " + TRIAL_i[TRIAL_TYPE] + " " + TRIAL_i[CHANGE] + 
+					  " " + string(target_type) + " " + string(hit) + string(incorrect) + " " + "\n");
 		
 	/* Trial counter */
 	trial_count = trial_count + 1;
