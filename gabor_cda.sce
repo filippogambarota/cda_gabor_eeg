@@ -211,7 +211,7 @@ trial {
 	stimulus_event {
 		picture P_mask;
 		code = "backward_mask";
-		deltat = 29;
+		deltat = 29; # ~33ms - ifi/2
 		duration = 346; # ~350ms - ifi/2
 	} E_mask;
 	
@@ -264,7 +264,7 @@ preset int Age;
 
 output_file outfile = new output_file;
 outfile.open("s" + string(Participant) + ".txt"); 
-outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ change\ target_type\ hit\ incorrect" + "\n");   # this create a space separated header
+outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ change\ target_type\ cdt_acc\ cdt_rt\ pas_resp\ pas_rt" + "\n");   # this create a space separated header
 
 /* Importing functions */
 
@@ -273,7 +273,7 @@ include "utils.pcl" # this import utility functions
 /* Conditions file */
 
 string cond_file = "make_cond/exp_cond.txt"; # the condition file
-int ncond = 7; # number of conditions (columns), this is required for reading the file
+int ncond = 6; # number of conditions (columns), this is required for reading the file
 
 int ntrials = get_trial_number(cond_file, ncond); # this read the file and return the trials number
 
@@ -298,6 +298,7 @@ int n_ori = gabor_images.count(); # number of orientations
 int pause_trial = 5; # number of trials for the pause
 int acc = 0;
 int PROBE_TRIGGER = 200; # this is the general code for the probe trigger
+array <int> empty_target_button[0]; # this is for setting no target buttons
 
 /* Response Keys Settings */
 
@@ -371,9 +372,11 @@ begin;
 	
 	/* TARGET, MASK and PROBE */
 	
+	term.print(TRIAL_i);
+	term.print("\n");
+	
 	if (TRIAL_i[TRIAL_TYPE] == "valid") then /* Check if the trial is VALID */
 		int trial_ori = int(TRIAL_i[ORIS]); # select the image (orientation) for that trial
-		
 		P_gabor.set_part(1, gabor_images[trial_ori]); # set the image (right)
 		P_gabor.set_part(2, gabor_images[trial_ori]); # set the image (left)
 		
@@ -390,6 +393,8 @@ begin;
 		end;
 		
 	else
+		E_gabor.set_response_active(false); # this turns the target (now masks) not as target active
+		E_gabor.set_target_button(empty_target_button); # remove target buttons
 		P_gabor.set_part(1, mask_image); # set the image (right)
 		P_gabor.set_part(2, mask_image); # set the image (left)
 		int probe_ori = random(1,n_ori);
@@ -413,22 +418,29 @@ begin;
 	T_retention.present();
 	T_probe.present();
 		
-	/* Collecting Response */
+	/* Collecting PROBE Response */
 	
 	stimulus_data probe_event = stimulus_manager.last_stimulus_data();
-	int probe_reaction_time = probe_event.reaction_time();
-	int target_type = probe_event.type();
-	int hit = probe_event.HIT;
-	int incorrect = probe_event.INCORRECT;
+	#term.print("trial" + string(trial_count) + "\n");
+	#term.print("probe_event.type()" + "\n");
+	#term.print(probe_event.type());
+	#term.print("\n");
+	#term.print("probe_event.HIT()" + "\n");
+	#term.print(probe_event.HIT);
+	#term.print("\n");
+	#int probe_reaction_time = probe_event.reaction_time();
+	#int target_type = probe_event.type();
+	#int hit = probe_event.HIT;
+	#int incorrect = probe_event.INCORRECT;
 	
-	T_pas.present();
+	#T_pas.present();
 	
 	/* Saving Data */
 	
-	outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ change\ target_type\ hit\ incorrect" + "\n");   # this create a space separated header
+	#outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ change\ target_type\ cdt_acc\ cdt_rt\ pas_resp\ pas_rt" + "\n");   # this create a space separated header
 
-	outfile.print(string(Participant) + " " + string(Age) + " " + Gender + " " + TRIAL_i[CUE] + " " + TRIAL_i[ORIS] + " " + TRIAL_i[TRIAL_TYPE] + " " + TRIAL_i[CHANGE] + 
-					  " " + string(target_type) + " " + string(hit) + string(incorrect) + " " + "\n");
+	#outfile.print(string(Participant) + " " + string(Age) + " " + Gender + " " + TRIAL_i[CUE] + " " + TRIAL_i[ORIS] + " " + TRIAL_i[TRIAL_TYPE] + " " + TRIAL_i[CHANGE] + 
+					  #" " + string(cdt_acc) + " " + string(cdt_rt) + string(pas_resp) + " " + string(pas_rt) + "\n");
 		
 	/* Trial counter */
 	trial_count = trial_count + 1;
