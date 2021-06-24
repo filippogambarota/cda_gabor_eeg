@@ -619,6 +619,7 @@
 <ibn>4</ibn>
 <ibn>F</ibn>
 <ibn>J</ibn>
+<ibn>Space</ibn>
 <idn>Keyboard</idn>
 <index>0</index>
 <index>1</index>
@@ -626,6 +627,8 @@
 <index>3</index>
 <index>4</index>
 <index>5</index>
+<index>6</index>
+<label></label>
 <label></label>
 <label></label>
 <label></label>
@@ -638,6 +641,7 @@
 <offset>5</offset>
 <offset>33</offset>
 <offset>36</offset>
+<offset>57</offset>
 <unique_id>1</unique_id>
 </idv>
 <overrides></overrides>
@@ -730,7 +734,7 @@
 </sde>
 <sdv>Primary Sound Driver</sdv>
 <show_dis>0</show_dis>
-<show_parm>0</show_parm>
+<show_parm>1</show_parm>
 <show_term>1</show_term>
 <smc>2</smc>
 <smd>16</smd>
