@@ -26,8 +26,8 @@ response_matching = simple_matching;
 
 /* Screen setup */
 
-default_font_size=46;
-default_font="arial";
+default_font_size = 46;
+default_font = "arial";
 default_background_color = 127, 127, 127; # grey color
 default_text_color = 255,255,255; # text to black default
 
@@ -273,7 +273,7 @@ include "utils.pcl" # this import utility functions
 /* Conditions file */
 
 string cond_file = "make_cond/exp_cond.txt"; # the condition file
-int ncond = 4; # number of conditions (columns), this is required for reading the file
+int ncond = 7; # number of conditions (columns), this is required for reading the file
 
 int ntrials = get_trial_number(cond_file, ncond); # this read the file and return the trials number
 
@@ -289,12 +289,15 @@ int CUE = 1; # cue direction "left" or "right"
 int ORIS = 2; # orientations (are indexes for the amount of available orientations, for the array of images)
 int TRIAL_TYPE = 3; # trial type "catch" or "valid"
 int CHANGE = 4; # if the probe gabor is the same or different
+int CUE_TRIGGER = 5; # which cue trigger
+int TARGET_TRIGGER = 6; # which target trigger
 
 /* General variables for the experiment */
 
 int n_ori = gabor_images.count(); # number of orientations
 int pause_trial = 5; # number of trials for the pause
 int acc = 0;
+int PROBE_TRIGGER = 200; # this is the general code for the probe trigger
 
 /* Response Keys Settings */
 
@@ -347,16 +350,12 @@ begin;
 	
 	/* Setting TRIGGERS */
 	
-	# These are triggers that can be set before
+	# These are triggers that can be set before. Responses are set later
 	
-	/*
-	E_fixation.set_port_code();
-	E_gabor.set_port_code();
-	E_mask.set_port_code();
-	E_retention.set_port_code();
-	E_probe.set_port_code();
-	E_pas.set_port_code();
-	*/
+	E_fixation.set_port_code(1); # random! to review
+	E_cue.set_port_code(int(TRIAL_i[CUE_TRIGGER]));
+	E_gabor.set_port_code(int(TRIAL_i[TARGET_TRIGGER]));
+	#E_probe.set_port_code(int(TRIAL_i[PROBE_TRIGGER]));
 	
 	/* Setting CUE */
 	
@@ -382,10 +381,12 @@ begin;
 			int probe_ori = generate_different_ori(1, n_ori, trial_ori); # generate a random id that is not the same as the $trial_ori
 			P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
 			E_probe.set_target_button(change_key); # this set the correct answer and key for that trial
+			E_probe.set_port_code(PROBE_TRIGGER + probe_ori); 
 		else
 			int probe_ori = trial_ori;
 			E_probe.set_target_button(nochange_key); # this set the correct answer and key for that trial
 			P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
+			E_probe.set_port_code(PROBE_TRIGGER + probe_ori); # this set the correct answer and key for that trial
 		end;
 		
 	else
@@ -412,11 +413,13 @@ begin;
 	T_retention.present();
 	T_probe.present();
 		
-	stimulus_data target = stimulus_manager.last_stimulus_data();
-	int cdt_rt = target.reaction_time();
-	int target_type = target.type();
-	int hit = target.HIT;
-	int incorrect = target.INCORRECT;
+	/* Collecting Response */
+	
+	stimulus_data probe_event = stimulus_manager.last_stimulus_data();
+	int probe_reaction_time = probe_event.reaction_time();
+	int target_type = probe_event.type();
+	int hit = probe_event.HIT;
+	int incorrect = probe_event.INCORRECT;
 	
 	T_pas.present();
 	
