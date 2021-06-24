@@ -111,3 +111,113 @@ begin
 	end;
 	return probe_ori;
 end;
+
+/* get_acc_event */
+
+# This function is a simple wrapper for getting accuracy from a given event
+# thanks to @maya
+
+sub
+	int get_acc_event(stimulus_data event_data)
+begin
+	int acc = 99;
+	if event_data.type() == event_data.HIT then  # The stimulus was a target and was associated with a correct response. 
+		acc = 1;
+	elseif event_data.type() == event_data.INCORRECT then  # The stimulus was a target and was associated with an incorrect response. 
+		acc = 0;
+	end;
+	return acc
+end;
+
+/* get_rt_event */
+
+# This function is a simple wrapper for getting reactions times
+
+sub
+	int get_rt_event(stimulus_data event_data)
+begin
+	int rt = event_data.reaction_time();
+	return rt
+end;
+
+/* get_cond_names */
+
+# This function read a cond_names files where the columns
+# names are located. Return an array with column names for
+# writing the condition file
+
+sub
+   array <string, 1> get_cond_names(string path)
+begin
+	input_file condfile = new input_file;
+	condfile.open(path);
+	condfile.set_delimiter(',');
+	array <string> cond_names[0];
+	loop int i = 1 until condfile.end_of_file()
+	begin
+		cond_names.add(condfile.get_line());
+	end;
+	condfile.close();
+	return cond_names
+end;
+
+/* get_cond_number */
+
+# This function return the number of conditions wihtin a condition
+# files. This is useful to automatize the reading process from the
+# main file
+
+sub
+   int get_cond_number(string path)
+begin
+	input_file condfile = new input_file;
+	condfile.open(path);
+	condfile.set_delimiter(',');
+	int ncond = 0;
+	loop until condfile.end_of_file()
+	begin
+		condfile.get_line();
+		ncond = ncond + 1;
+	end;
+	condfile.close();
+	return ncond
+end;
+
+/* write_experiment_file */
+
+# This function take several inputs and basically return the shuffled TRIALS vector
+# that is used in a specific trial. This is useful to reconstruct some properties if
+# missing
+
+sub
+   string write_experiment_file(string output_file_name, array <string,1>& cond_names, int ntrials, array <string,2>& TRIALS)
+begin
+	output_file out_expfile = new output_file;
+	out_expfile.open(output_file_name);
+	
+	# Write header
+	
+	loop int col = 1 until col > cond_names.count()
+	begin
+		out_expfile.print(cond_names[col] + " ");
+		col = col + 1;
+	end;
+	
+	out_expfile.print("\n"); # new line
+	
+	# Write Conditions
+	
+	loop int i = 1 until i > ntrials
+	begin
+		loop int cond = 1 until cond > cond_names.count()
+		begin
+			out_expfile.print(TRIALS[i][cond] + " ");
+			cond = cond + 1;
+		end;
+		out_expfile.print("\n");
+		i = i + 1;
+	end;
+	out_expfile.close();
+	string out = "done";
+	return out
+end;
