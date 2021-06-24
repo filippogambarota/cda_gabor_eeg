@@ -26,8 +26,6 @@ catch_trials <- expand_grid(
 )
 
 exp_trials <- rbind(valid_trials, catch_trials)
-exp_trials$trial <- 1:nrow(exp_trials)
-exp_trials <- select(exp_trials, -trial)
 
 # Test for triggers
 
@@ -40,6 +38,8 @@ exp_trials %>%
                                    100 + target_orientation,
                                    199)) -> exp_trials
 
+# This write the main condition file
+
 exp_trials %>% 
     write.table(., file = "exp_cond.txt",
                 sep = ",", # separator
@@ -48,3 +48,8 @@ exp_trials %>%
                 row.names = FALSE, 
                 fileEncoding = "UTF8", 
                 quote = FALSE) # for presentation string
+
+# This write the colnames string
+
+colnames(exp_trials) %>% 
+    cat(., file = "cond_names.txt", sep = ",")
