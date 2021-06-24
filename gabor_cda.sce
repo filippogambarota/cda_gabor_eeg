@@ -201,6 +201,14 @@ trial {
 } T_cue;
 
 trial {
+	# set duration in pcl
+	stimulus_event{
+		picture P_fixation;
+		code = "fix_jitter";
+	} E_fix_jitter;
+} T_fix_jitter;
+
+trial {
 	stimulus_event {
 		picture P_gabor;
 		code = "gabor";
@@ -274,9 +282,12 @@ include "utils.pcl" # this import utility functions
 /* Conditions file */
 
 string cond_file = "make_cond/exp_cond.txt"; # the condition file
-int ncond = 6; # number of conditions (columns), this is required for reading the file
+string cond_names_file = ("make_cond/cond_names.txt");
+string out_exp_trials = ("exp_order/" + "s" + string(Participant) + "_exp_order.txt");
 
+int ncond = get_cond_number(cond_names_file); # get the number of columns
 int ntrials = get_trial_number(cond_file, ncond); # this read the file and return the trials number
+array <string> cond_names[ncond] = get_cond_names(cond_names_file); # array with conditions names
 
 # Multimensional array for trials TRIALS[trial)[condition] e.g TRIALS[1][CUE] tells if
 # for the trial 1 the cue is left or right
@@ -298,8 +309,10 @@ int TARGET_TRIGGER = 6; # which target trigger
 int n_ori = gabor_images.count(); # number of orientations
 int pause_trial = 5; # number of trials for the pause
 int PROBE_TRIGGER = 200; # this is the general code for the probe trigger
+int FIX_JITTER_TRIGGER = 60; # this is the general code for the fixation jitter trigger
 array <int> empty_target_button[0]; # this is for setting no target buttons
 int probe_ori = 999;
+array <int> fix_jittered_dur[4] = {350, 400, 450, 500}; # jittered time for fixation
 
 /* Response Keys Settings */
 
@@ -337,6 +350,10 @@ TRIALS_ORDER.shuffle(); # this shuffle the array in order to have a random index
 
 TRIALS.shuffle(); # This randomize the order of the array
 
+/* Saving Experiment Order */
+
+string wri = write_experiment_file(out_exp_trials, cond_names, ntrials, TRIALS);
+
 /* Welcome screen */
 
 P_message.set_part(1, TXT_welcome); # welcome message that use the txt object and the empty message picture
@@ -373,6 +390,13 @@ begin;
 		P_cue.set_part(2, cue_right);
 		P_cue.set_part(3, cue_right);
 	end;
+	
+	/* Setting Jittered Fixation */
+	
+	int jitter_i = random(1, fix_jittered_dur.count());
+	term.print(fix_jittered_dur[jitter_i] - 4);
+	T_fix_jitter.set_duration(fix_jittered_dur[jitter_i] - 4); # @slack approach
+	E_fix_jitter.set_port_code(FIX_JITTER_TRIGGER + jitter_i); # send trigger
 	
 	/* TARGET, MASK and PROBE */
 	
@@ -415,11 +439,13 @@ begin;
 	
 	T_fixation.present();
 	T_cue.present();
+	T_fix_jitter.present();
 	T_target_mask.present();
 	T_retention.present();
-	T_probe.present();
 		
 	/* Collecting PROBE Response */
+	
+	T_probe.present();
 	
 	stimulus_data probe_event = stimulus_manager.last_stimulus_data();
 	
@@ -427,11 +453,9 @@ begin;
 	string probe_resp = resp_array[probe_event.button()]; # get the change/no change response
 	int probe_rt = probe_event.reaction_time(); # get reaction times
 	
-	/* End PROBE Response */
+	/* Collecting PAS Response */
 	
 	T_pas.present();
-	
-	/* Collecting PAS Response */
 	
 	stimulus_data pas_event = stimulus_manager.last_stimulus_data();
 	int pas_rt = pas_event.reaction_time();
