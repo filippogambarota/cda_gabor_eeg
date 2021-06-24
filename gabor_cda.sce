@@ -5,8 +5,9 @@
 
 Filippo Gambarota, University of Padova
 
-Experiment credits: .@Maya and templates provided by 
-https://www.aesthetics.mpg.de/services/progress/presentation.html
+Experiment credits: 
+@Maya
+@templates provided by https://www.aesthetics.mpg.de/services/progress/presentation.html
 
 */
 
@@ -264,7 +265,7 @@ preset int Age;
 
 output_file outfile = new output_file;
 outfile.open("s" + string(Participant) + ".txt"); 
-outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ change\ target_type\ cdt_acc\ cdt_rt\ pas_resp\ pas_rt" + "\n");   # this create a space separated header
+outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ probe_ori\ change \ probe_acc\ probe_rt\ probe_resp\ pas_resp\ pas_rt" + "\n");   # this create a space separated header
 
 /* Importing functions */
 
@@ -296,11 +297,15 @@ int TARGET_TRIGGER = 6; # which target trigger
 
 int n_ori = gabor_images.count(); # number of orientations
 int pause_trial = 5; # number of trials for the pause
-int acc = 0;
 int PROBE_TRIGGER = 200; # this is the general code for the probe trigger
 array <int> empty_target_button[0]; # this is for setting no target buttons
+int probe_ori = 999;
 
 /* Response Keys Settings */
+
+array <string> resp_array[7] = {"pas1", "pas2", "pas3", "pas4", 
+										  "change", "nochange", 
+										  "continue"};
 
 int pas1_key = 1;
 int pas2_key = 2;
@@ -356,7 +361,6 @@ begin;
 	E_fixation.set_port_code(1); # random! to review
 	E_cue.set_port_code(int(TRIAL_i[CUE_TRIGGER]));
 	E_gabor.set_port_code(int(TRIAL_i[TARGET_TRIGGER]));
-	#E_probe.set_port_code(int(TRIAL_i[PROBE_TRIGGER]));
 	
 	/* Setting CUE */
 	
@@ -372,22 +376,19 @@ begin;
 	
 	/* TARGET, MASK and PROBE */
 	
-	term.print(TRIAL_i);
-	term.print("\n");
-	
 	if (TRIAL_i[TRIAL_TYPE] == "valid") then /* Check if the trial is VALID */
 		int trial_ori = int(TRIAL_i[ORIS]); # select the image (orientation) for that trial
 		P_gabor.set_part(1, gabor_images[trial_ori]); # set the image (right)
 		P_gabor.set_part(2, gabor_images[trial_ori]); # set the image (left)
 		
 		if (TRIAL_i[CHANGE] == "yes") then /* Check if PROBE CHANGE */
-			int probe_ori = generate_different_ori(1, n_ori, trial_ori); # generate a random id that is not the same as the $trial_ori
+			probe_ori = generate_different_ori(1, n_ori, trial_ori); # generate a random id that is not the same as the $trial_ori
 			P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
 			E_probe.set_target_button(change_key); # this set the correct answer and key for that trial
 			E_probe.set_port_code(PROBE_TRIGGER + probe_ori); 
 		else
-			int probe_ori = trial_ori;
 			E_probe.set_target_button(nochange_key); # this set the correct answer and key for that trial
+			probe_ori = trial_ori; # probe orientation is the same
 			P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
 			E_probe.set_port_code(PROBE_TRIGGER + probe_ori); # this set the correct answer and key for that trial
 		end;
@@ -397,7 +398,7 @@ begin;
 		E_gabor.set_target_button(empty_target_button); # remove target buttons
 		P_gabor.set_part(1, mask_image); # set the image (right)
 		P_gabor.set_part(2, mask_image); # set the image (left)
-		int probe_ori = random(1,n_ori);
+		probe_ori = random(1, n_ori);
 		P_probe.set_part(1, gabor_images[probe_ori]);
 	end;
 	
@@ -421,26 +422,29 @@ begin;
 	/* Collecting PROBE Response */
 	
 	stimulus_data probe_event = stimulus_manager.last_stimulus_data();
-	#term.print("trial" + string(trial_count) + "\n");
-	#term.print("probe_event.type()" + "\n");
-	#term.print(probe_event.type());
-	#term.print("\n");
-	#term.print("probe_event.HIT()" + "\n");
-	#term.print(probe_event.HIT);
-	#term.print("\n");
-	#int probe_reaction_time = probe_event.reaction_time();
-	#int target_type = probe_event.type();
-	#int hit = probe_event.HIT;
-	#int incorrect = probe_event.INCORRECT;
 	
-	#T_pas.present();
+	int probe_acc = get_acc_event(probe_event); # get the accuracy for the event
+	string probe_resp = resp_array[probe_event.button()]; # get the change/no change response
+	int probe_rt = probe_event.reaction_time(); # get reaction times
+	
+	/* End PROBE Response */
+	
+	T_pas.present();
+	
+	/* Collecting PAS Response */
+	
+	stimulus_data pas_event = stimulus_manager.last_stimulus_data();
+	int pas_rt = pas_event.reaction_time();
+	string pas_resp = resp_array[pas_event.button()]; # get the pas response
+	
+	/* End PAS Response */
 	
 	/* Saving Data */
 	
-	#outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ change\ target_type\ cdt_acc\ cdt_rt\ pas_resp\ pas_rt" + "\n");   # this create a space separated header
+	#outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ change\ target_type\ probe_acc\ probe_rt\ probe_resp\ pas_resp\ pas_rt" + "\n");   # this create a space separated header
 
-	#outfile.print(string(Participant) + " " + string(Age) + " " + Gender + " " + TRIAL_i[CUE] + " " + TRIAL_i[ORIS] + " " + TRIAL_i[TRIAL_TYPE] + " " + TRIAL_i[CHANGE] + 
-					  #" " + string(cdt_acc) + " " + string(cdt_rt) + string(pas_resp) + " " + string(pas_rt) + "\n");
+	outfile.print(string(Participant) + " " + string(Age) + " " + Gender + " " + TRIAL_i[CUE] + " " + TRIAL_i[ORIS] + " " + TRIAL_i[TRIAL_TYPE] + " " + string(probe_ori) + " " + TRIAL_i[CHANGE] + " " + 
+						string(probe_acc) + " " + string(probe_rt) + " " + probe_resp + " " + pas_resp + " " + string(pas_rt) + "\n");
 		
 	/* Trial counter */
 	trial_count = trial_count + 1;
