@@ -29,7 +29,7 @@ response_matching = simple_matching;
 
 default_font_size = 46;
 default_font = "arial";
-default_background_color = 127, 127, 127; # grey color
+default_background_color = 128, 128, 128; # grey color
 default_text_color = 255,255,255; # text to black default
 
 #default_text_color=0,0,0; Maya version
@@ -37,8 +37,8 @@ default_text_color = 255,255,255; # text to black default
 
 /* Response setup */
 
-active_buttons = 7; # the number is the number of activated input buttons (i.e. keys)
-button_codes = 11, 12, 13, 14, 20, 29, 99; # these are codes for triggers associated with each button
+active_buttons = 8; # the number is the number of activated input buttons (i.e. keys)
+button_codes = 11, 12, 13, 14, 20, 29, 99, 999; # these are codes for triggers associated with each button
 
 ### STARTING SDL
 
@@ -79,17 +79,27 @@ arrow_graphic {
 
 /* Images objects */
 
+# this loop create the mock images array for the pcl part
+
+$ngabors = 11;
+
 array {
-	bitmap { filename = "final/gabor_135.tiff";};
-	bitmap { filename = "final/gabor_150.tiff";};
-	bitmap { filename = "final/gabor_165.tiff";};
-	bitmap { filename = "final/gabor_180.tiff";};
-	bitmap { filename = "final/gabor_195.tiff";};
-	bitmap { filename = "final/gabor_210.tiff";};
-	bitmap { filename = "final/gabor_225.tiff";};
+   LOOP $i $ngabors;
+   $k = '$i + 1';
+   bitmap { filename = ""; preload = false;};
+   ENDLOOP;
 } gabor_images;
 
-bitmap { filename = "final/mask.tiff"; } mask_image;
+# this loop create the mock images array for the pcl part for the det task
+
+array {
+   LOOP $i $ngabors;
+   $k = '$i + 1';
+   bitmap { filename = ""; preload = false;};
+   ENDLOOP;
+} det_images;
+
+bitmap { filename = "mask.tiff"; } mask_image;
 
 text {caption = "PAS QUESTION HERE";} TXT_pas;
 
@@ -141,6 +151,19 @@ picture {
 	text TXT_pas;
 	x = 0; y = 0;
 } P_pas;
+
+
+# This is the picture with the cursor and the response options
+
+picture{
+	text {
+		caption = "+";
+		font_color = 0,0,0;
+		transparent_color = 128, 128, 128;
+	} cursor;
+	x = 0; y = 0;
+	on_top = true;
+} P_det;
 
 /* Trials objects */
 
@@ -258,10 +281,30 @@ trial {
 	} E_pas;
 } T_pas;
 
+# This is the trial for the det response
+
+trial {
+	stimulus_event{
+		picture P_det;
+		response_active = true;
+	} E_det;
+} T_det;
 
 ### STARTING PCL
 
 begin_pcl;
+
+/* Mouse Setup */
+
+mouse mse = response_manager.get_mouse( 1 );
+int max_x = display_device.width() / 2;
+int min_x = -max_x;
+int max_y = display_device.height() / 2;
+int min_y = -max_y;
+mse.set_min_max( 1, min_x, max_x );
+mse.set_min_max( 2, min_y, max_y );
+mse.set_restricted( 1, true );
+mse.set_restricted( 2, true );
 
 /* User Prompt */
 
@@ -273,7 +316,7 @@ preset int Age;
 
 output_file outfile = new output_file;
 outfile.open("s" + string(Participant) + ".txt"); 
-outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ probe_ori\ change \ probe_acc\ probe_rt\ probe_resp\ pas_resp\ pas_rt" + "\n");   # this create a space separated header
+outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ probe_ori\ change \ probe_acc\ probe_rt\ probe_resp\ pas_resp\ pas_rt\ det_resp\ det_rt\ det_acc" + "\n");   # this create a space separated header
 
 /* Importing functions */
 
@@ -297,6 +340,45 @@ array<string> TRIALS[ntrials][ncond] = get_trial_2Darray(cond_file, ncond, ntria
 # This are the indexing for the columns of the TRIALS object. TRIALS[1][1] is equivalent to
 # TRIALS[1][CUE] when CUE = 1. This is only for convenience (thanks to @nbs youtube videos)
 
+/* Importing and Loading Images */
+
+string subject_images_path = "S" + string(Participant) + "/"; # the current participant
+string det_path = "det_stimuli" + "/"; # the general folder for gabors
+
+# Array with images. The order is also for the DET response
+
+array <string> IMAGE_NAMES[gabor_images.count()] = {
+	"gabor_285.tiff", "gabor_300.tiff", "gabor_315.tiff", "gabor_330.tiff", "gabor_345.tiff", # left side --> anticlockwise
+	"gabor_0.tiff", # center
+	"gabor_15.tiff", "gabor_30.tiff", "gabor_45.tiff", "gabor_60.tiff", "gabor_75.tiff" # right side --> anticlockwise
+};
+
+# This read and load the images using the path and the IMAGE_NAMES array
+
+int resize_im_factor = 1;
+
+loop int i = 1 until i > gabor_images.count()
+begin
+	gabor_images[i].set_filename(subject_images_path + IMAGE_NAMES[i]);
+	gabor_images[i].set_load_size(0,0,resize_im_factor); # resize images. if 1 the size is the same as the file
+	gabor_images[i].load();
+	i = i + 1;
+end;
+
+# This read and load the images using the path and the IMAGE_NAMES array for the det task
+
+int resize_det_factor = 1;
+
+loop int i = 1 until i > det_images.count()
+begin
+	det_images[i].set_filename(det_path + IMAGE_NAMES[i]);
+	det_images[i].set_load_size(0,0,resize_det_factor); # resize images. if 1 the size is the same as the file
+	det_images[i].load();
+	i = i + 1;
+end;
+
+/* Index for trials array */
+
 int CUE = 1; # cue direction "left" or "right"
 int ORIS = 2; # orientations (are indexes for the amount of available orientations, for the array of images)
 int TRIAL_TYPE = 3; # trial type "catch" or "valid"
@@ -314,11 +396,51 @@ array <int> empty_target_button[0]; # this is for setting no target buttons
 int probe_ori = 999;
 array <int> fix_jittered_dur[4] = {350, 400, 450, 500}; # jittered time for fixation
 
+/* DET setup */
+
+# DET gabor size
+
+int tgt_height = 154; # the image height
+int tgt_width = 154; # the image width
+
+# DET gabors array with positions
+
+array <int> tgt_pos[n_ori][2] = {
+	# anticlockwise
+	
+	{-769, 111}, # 1
+	{-707, 323}, # 2
+	{-587, 509}, # 3
+	{-420, 654}, # 4
+	{-219, 746}, # 5
+	
+	{0, 777},    # 6 center
+	
+	# clockwise
+	{219, 746},  # 7
+	{420, 654},  # 8
+	{587, 509},  # 9
+	{707, 323},  # 10
+	{769, 111}   # 11
+};
+
+# Setting coordinates for the picture objects according to the tgt pos array
+# and setting the full contrast gabors
+
+int shift_y = 400; # vertical shift
+
+loop int i = 1 until i > gabor_images.count()
+begin
+	tgt_pos[i][2] = tgt_pos[i][2] - shift_y; # we need also to modify the tgt_pos array for the mouse response
+	P_det.add_part(gabor_images[i], tgt_pos[i][1], tgt_pos[i][2]); # set all images and coordinates
+	i = i + 1;
+end;
+
 /* Response Keys Settings */
 
 array <string> resp_array[7] = {"pas1", "pas2", "pas3", "pas4", 
 										  "change", "nochange", 
-										  "continue"};
+										  "continue", "mouse"};
 
 int pas1_key = 1;
 int pas2_key = 2;
@@ -327,21 +449,78 @@ int pas4_key = 4;
 int change_key = 5;
 int nochange_key = 6;
 int continue_key = 7;
+int mouse_key = 8;
 
-/* Trials setup */
+/* SUBROUTINES */
 
-/* # Previous approach
-array <int> TRIALS_ORDER[ntrials] = generate_trial_id(ntrials); # this generate an array from 1 to ntrials
-TRIALS_ORDER.shuffle(); # this shuffle the array in order to have a random index fot TRIALS[TRIAL_ID[i]][]
-*/
+# Check if the pressed stimulus is a target https://www.neurobs.com/menu_support/menu_forums/view_thread?id=10296
 
+sub
+    bool on_target( int tgt_x, int tgt_y )
+begin
+    mse.poll();
+    double curr_x = mse.x_position();
+    double curr_y = mse.y_position();
+    
+    if ( curr_x >= tgt_x - ( tgt_width * 0.5 ) ) && ( curr_x <= tgt_x + ( tgt_width * 0.5 ) ) &&
+        ( curr_y >= tgt_y - ( tgt_height * 0.5 ) ) && ( curr_y <= tgt_y + ( tgt_height * 0.5 ) ) then
+        return true
+    end;
+    return false
+end;
+
+# using the on_target() method iterating across all targets within array and
+# get the pressed stimulus index
+
+sub
+	int which_target
+begin
+	int idx_target = 0;
+	bool target_found = false;
+	loop int i = 1 until i > tgt_pos.count() || target_found
+	begin
+		target_found = on_target(tgt_pos[i][1], tgt_pos[i][2]);
+		idx_target = i;
+		i = i + 1;
+	end;
+	
+	if !target_found then
+		idx_target = 0;
+	end;
+	return idx_target;
+end;
+
+# display the DET trial and collect response
+
+sub 
+	int det_task
+	begin
+		int ii = 0;
+		loop
+			int idx = 0
+		until
+		 idx != 0
+		begin
+		 # Update cursor position and present picture until a response is made
+			loop int resp_ct = response_manager.total_response_count( mouse_key )
+			until response_manager.total_response_count( mouse_key ) > resp_ct
+			begin
+			  mse.poll();
+			  P_det.set_part_x( 1, mse.x_position() );
+			  P_det.set_part_y( 1, mse.y_position() );
+			  T_det.present();
+			end;
+			# Now that a response is made, check if it's on target
+			# We pass the target's x/y location to the subroutine
+			idx = which_target();
+			ii = idx;
+		end;
+	return ii;
+end;
 
 ##############################################################################################################
+###############################    STARTING THE EXPERIMENT     ###############################################
 ##############################################################################################################
-##############################################################################################################
-
-### STARTING THE EXPERIMENT
-
 
 /* Trials Randomization */
 
@@ -394,7 +573,6 @@ begin;
 	/* Setting Jittered Fixation */
 	
 	int jitter_i = random(1, fix_jittered_dur.count());
-	term.print(fix_jittered_dur[jitter_i] - 4);
 	T_fix_jitter.set_duration(fix_jittered_dur[jitter_i] - 4); # @slack approach
 	E_fix_jitter.set_port_code(FIX_JITTER_TRIGGER + jitter_i); # send trigger
 	
@@ -463,12 +641,26 @@ begin;
 	
 	/* End PAS Response */
 	
+	/* Collecting DET Response and RT */
+
+	int start_det = clock.time();
+	int det_resp = det_task();
+	term.print(string(det_resp) + "\n");
+	int det_rt = response_manager.last_response_data().time() - start_det;
+	
+	# check det accuracy
+	int det_acc = 0;
+	
+	if int(TRIAL_i[ORIS]) == det_resp then
+		det_acc = 1;
+	end;
+	
 	/* Saving Data */
 	
-	#outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ change\ target_type\ probe_acc\ probe_rt\ probe_resp\ pas_resp\ pas_rt" + "\n");   # this create a space separated header
+	#outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ probe_ori\ change \ probe_acc\ probe_rt\ probe_resp\ pas_resp\ pas_rt\ det_resp\ det_rt\ det_acc" + "\n");   # this create a space separated header
 
 	outfile.print(string(Participant) + " " + string(Age) + " " + Gender + " " + TRIAL_i[CUE] + " " + TRIAL_i[ORIS] + " " + TRIAL_i[TRIAL_TYPE] + " " + string(probe_ori) + " " + TRIAL_i[CHANGE] + " " + 
-						string(probe_acc) + " " + string(probe_rt) + " " + probe_resp + " " + pas_resp + " " + string(pas_rt) + "\n");
+						string(probe_acc) + " " + string(probe_rt) + " " + probe_resp + " " + pas_resp + " " + string(pas_rt) + " " + string(det_resp)+ " " + string(det_rt) + " " + string(det_acc) + "\n");
 		
 	/* Trial counter */
 	trial_count = trial_count + 1;
