@@ -5,5 +5,5 @@ filepath = fileparts(which('crop_image.m'));
 
 for im = 1:size(images, 1)
     temp = imcrop(images{im},[885  465 150 150]);
-    imwrite(temp, fullfile("final", imnames{im}))
+    imwrite(temp, fullfile("s1", imnames{im}))
 end

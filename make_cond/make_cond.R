@@ -5,9 +5,10 @@ library(tidyverse)
 # Generate Conditions
 
 cue <- c("left", "right")
-target_orientation <- c(1, 2, 3, 4, 5, 6, 7)
+target_orientation <- 1:11 # all orientations
 change <- c("yes", "no")
 ntrials <- 1
+ncatch <- 10 # need to be a multiple of 2 number
 
 valid_trials <- expand_grid(
     cue,
@@ -22,7 +23,7 @@ catch_trials <- expand_grid(
     target_orientation = 0,
     trial_type = "catch",
     change = 0,
-    trial = 1:10
+    trial = 1:(ncatch/2) # for having the exact number of catch
 )
 
 exp_trials <- rbind(valid_trials, catch_trials)
