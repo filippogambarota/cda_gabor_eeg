@@ -59,5 +59,7 @@ So in my case:
 
 * block organization
 * timing
-* save TRIALS object for debug and backup
-* ask roy about considering all triggers a posterior instead of producing wrong and right triggers
+* check accuracy and rt for det
+* check how to send manual triggers
+* check if the triggering system works
+* check size and numbers of gabors
