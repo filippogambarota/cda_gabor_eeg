@@ -202,41 +202,31 @@ trial {
 	picture P_message;
 } T_message;
 
-trial {
-	trial_duration = 496; # ~500 - ifi/2
-	
+trial {	
 	stimulus_event {
 		picture P_fixation;
 		code = "fixation";
+		duration = 496; # ~ 500ms - ifi/2
 	} E_fixation;
-	
-} T_fixation;
-
-
-trial {
-	trial_duration = 496; # ~500 - ifi/2
 	
 	stimulus_event {
 		picture P_cue;
 		code = "cue";
+		deltat = 496; # ~ 500ms - ifi/2
+		duration = 496; # ~ 500ms - ifi/2
 	} E_cue;
 	
-} T_cue;
-
-trial {
-	# set duration in pcl
 	stimulus_event{
 		picture P_fixation;
 		code = "fix_jitter";
+		deltat = 496; # ~ 500ms - ifi/2
+		duration = 496; # ~ 500ms - ifi/2
 	} E_fix_jitter;
-} T_fix_jitter;
-
-trial {
+	
 	stimulus_event {
 		picture P_gabor;
 		code = "gabor";
-		#time = 0;
-		deltat = 0;
+		deltat = 496;
 		duration = 29; # ~33ms - ifi/2
 	} E_gabor;
 	
@@ -247,15 +237,13 @@ trial {
 		duration = 346; # ~350ms - ifi/2
 	} E_mask;
 	
-} T_target_mask;
-
-trial {
-	trial_duration = 1250;
 	stimulus_event {
 		picture P_fixation;
 		code = "retention_interval";
+		deltat = 346;
+		duration = 1246; # `1250 - ifi/2
 	} E_retention;
-} T_retention;
+} T_main;
 
 trial {
 	trial_duration = forever; # stay forever until response
@@ -573,7 +561,8 @@ begin;
 	/* Setting Jittered Fixation */
 	
 	int jitter_i = random(1, fix_jittered_dur.count());
-	T_fix_jitter.set_duration(fix_jittered_dur[jitter_i] - 4); # @slack approach
+	E_fix_jitter.set_duration(fix_jittered_dur[jitter_i] - 4); # @slack approach
+	E_gabor.set_deltat(fix_jittered_dur[jitter_i] - 4); # @slack approach, change the deltat because has changed also for the jittering
 	E_fix_jitter.set_port_code(FIX_JITTER_TRIGGER + jitter_i); # send trigger
 	
 	/* TARGET, MASK and PROBE */
@@ -615,11 +604,13 @@ begin;
 	
 	### TRIALS
 	
-	T_fixation.present();
-	T_cue.present();
-	T_fix_jitter.present();
-	T_target_mask.present();
-	T_retention.present();
+	#T_fixation.present();
+	#T_cue.present();
+	#T_fix_jitter.present();
+	#T_target_mask.present();
+	#T_retention.present();
+	
+	T_main.present();
 		
 	/* Collecting PROBE Response */
 	
@@ -649,11 +640,14 @@ begin;
 	int det_rt = response_manager.last_response_data().time() - start_det;
 	
 	# check det accuracy
-	int det_acc = 0;
+	int det_acc = 0; # 99
 	
 	if int(TRIAL_i[ORIS]) == det_resp then
 		det_acc = 1;
 	end;
+	
+	# log the accuracy in the next trial
+	
 	
 	/* Saving Data */
 	
