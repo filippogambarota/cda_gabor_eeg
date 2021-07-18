@@ -34,7 +34,7 @@ exp_trials %>%
 
     # TRIGGERS MUTATE
 
-    mutate(cue_trigger = ifelse(cue == "left", 50, 59),
+    mutate(cue_trigger = ifelse(cue == "left", 30, 39),
            target_trigger = ifelse(trial_type == "valid",
                                    100 + target_orientation,
                                    199)) -> exp_trials

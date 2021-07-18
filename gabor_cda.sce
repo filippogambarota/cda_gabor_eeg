@@ -6,23 +6,15 @@
 Filippo Gambarota, University of Padova
 
 Experiment credits: 
+
 @Maya
 @templates provided by https://www.aesthetics.mpg.de/services/progress/presentation.html
 
-*/
+/* ############################################################################## */
 
-### GENERAL EXPERIMENT SETTINGS
-
-/* MAYA Experiment code for triggering */
-
-#write_codes = true; #sending triggers to the port (I think)
-#pulse_width = 12; #connected to the port setting
-
-/* This is sufficient for sending triggers when the response is correct */
-
-#button_codes = 222, 223, 99; #appears when incorrect 
-#target_button_codes = 242, 243, 99; # appears when correct
-
+write_codes = true; # sending triggers to the port
+pulse_width = 12;
+response_logging = log_active;
 response_matching = simple_matching;
 
 /* Screen setup */
@@ -32,15 +24,12 @@ default_font = "arial";
 default_background_color = 128, 128, 128; # grey color
 default_text_color = 255,255,255; # text to black default
 
-#default_text_color=0,0,0; Maya version
-#default_background_color =180,180,180; # Maya version
-
 /* Response setup */
 
 active_buttons = 8; # the number is the number of activated input buttons (i.e. keys)
-button_codes = 11, 12, 13, 14, 20, 29, 99, 999; # these are codes for triggers associated with each button
+button_codes = 11, 12, 13, 14, 10, 19, 99, 99; # these are codes for triggers associated with each button
 
-### STARTING SDL
+/* STARTING SDL ################################################################## */
 
 begin;
 
@@ -112,9 +101,19 @@ picture {
 } P_message;
 
 picture {
+	text {caption = "";};
+	x = 0; y = 0;
+} P_blank;
+
+picture {
 	text TXT_fix_cross;
 	x = 0; y = 0;
 } P_fixation;
+
+picture {
+	text {caption = "";};
+	x = 0; y = 0;
+} P_jitter_empty;
 
 picture {
 		text TXT_fix_cross;
@@ -151,7 +150,6 @@ picture {
 	text TXT_pas;
 	x = 0; y = 0;
 } P_pas;
-
 
 # This is the picture with the cursor and the response options
 
@@ -197,10 +195,14 @@ trial { #start recording trial - send a code to make biosemi start recode (254)
 trial {
 	trial_duration = forever;
 	trial_type = specific_response;    	# trial ends when response
-   terminator_button = 7; # ends only with space
-
-	picture P_message;
+	terminator_button = 7; # ends only with space
+	stimulus_event{
+		picture P_message;
+		response_active = false;
+	} E_message;
 } T_message;
+
+### TODO fix the 1 trigger after fixation
 
 trial {	
 	stimulus_event {
@@ -217,11 +219,11 @@ trial {
 	} E_cue;
 	
 	stimulus_event{
-		picture P_fixation;
+		picture P_jitter_empty;
 		code = "fix_jitter";
 		deltat = 496; # ~ 500ms - ifi/2
 		duration = 496; # ~ 500ms - ifi/2
-	} E_fix_jitter;
+	} E_jitter;
 	
 	stimulus_event {
 		picture P_gabor;
@@ -274,13 +276,30 @@ trial {
 trial {
 	stimulus_event{
 		picture P_det;
-		response_active = true;
+		response_active = false;
 	} E_det;
 } T_det;
 
-### STARTING PCL
+trial {
+	trial_duration = 1000;
+	stimulus_event{
+		picture P_blank;
+	} E_iti;
+} T_iti;
+
+/* STARTING PCL ################################################################## */
 
 begin_pcl;
+
+/* Manual Port Setup */
+
+# This set up a port for sending a manual trigger for the DET task 
+
+if (output_port_manager.port_count() == 0) then
+   term.print( "Forgot to add an output port!" )
+end;
+output_port manual_port = output_port_manager.get_port( 1 );
+manual_port.set_pulse_width(12);
 
 /* Mouse Setup */
 
@@ -304,7 +323,7 @@ preset int Age;
 
 output_file outfile = new output_file;
 outfile.open("s" + string(Participant) + ".txt"); 
-outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ probe_ori\ change \ probe_acc\ probe_rt\ probe_resp\ pas_resp\ pas_rt\ det_resp\ det_rt\ det_acc" + "\n");   # this create a space separated header
+outfile.print("subject\ age\ gender\ cue\ oris\ trial_ori_image\ trial_type\ probe_ori\ change \ probe_acc\ probe_rt\ probe_resp\ pas_resp\ pas_rt\ det_resp\ det_image\ det_rt\ det_acc" + "\n");   # this create a space separated header
 
 /* Importing functions */
 
@@ -376,10 +395,19 @@ int TARGET_TRIGGER = 6; # which target trigger
 
 /* General variables for the experiment */
 
+# Triggers value 
+
+int ORI_TRIGGER = 100; # this is the general code for the probe trigger
+int FIX_TRIGGER = 40; # this is the general code for the fixation jitter trigger
+int LEFT_CUE_TRIGGER = 30;
+int RIGHT_CUE_TRIGGER = 39;
+int CATCH_TRIGGER = 199;
+int det_corr_response = 150; # code for the correct response
+int det_wrong_response = 200; # code for the wrong response
+
+# Other variables
 int n_ori = gabor_images.count(); # number of orientations
 int pause_trial = 5; # number of trials for the pause
-int PROBE_TRIGGER = 200; # this is the general code for the probe trigger
-int FIX_JITTER_TRIGGER = 60; # this is the general code for the fixation jitter trigger
 array <int> empty_target_button[0]; # this is for setting no target buttons
 int probe_ori = 999;
 array <int> fix_jittered_dur[4] = {350, 400, 450, 500}; # jittered time for fixation
@@ -426,7 +454,7 @@ end;
 
 /* Response Keys Settings */
 
-array <string> resp_array[7] = {"pas1", "pas2", "pas3", "pas4", 
+array <string> resp_array[8] = {"pas1", "pas2", "pas3", "pas4", 
 										  "change", "nochange", 
 										  "continue", "mouse"};
 
@@ -541,18 +569,17 @@ begin;
 	/* Setting TRIGGERS */
 	
 	# These are triggers that can be set before. Responses are set later
-	
-	E_fixation.set_port_code(1); # random! to review
-	E_cue.set_port_code(int(TRIAL_i[CUE_TRIGGER]));
-	E_gabor.set_port_code(int(TRIAL_i[TARGET_TRIGGER]));
+	E_fixation.set_port_code(FIX_TRIGGER);
 	
 	/* Setting CUE */
 	
 	if (TRIAL_i[CUE] == "left") then
+		E_cue.set_port_code(LEFT_CUE_TRIGGER);
 		# setting the cue direction
 		P_cue.set_part(2, cue_left); 
 		P_cue.set_part(3, cue_left);
 	else
+		E_cue.set_port_code(RIGHT_CUE_TRIGGER);
 		# setting the cue direction
 		P_cue.set_part(2, cue_right);
 		P_cue.set_part(3, cue_right);
@@ -560,15 +587,16 @@ begin;
 	
 	/* Setting Jittered Fixation */
 	
-	int jitter_i = random(1, fix_jittered_dur.count());
-	E_fix_jitter.set_duration(fix_jittered_dur[jitter_i] - 4); # @slack approach
+	int jitter_i = random(1, fix_jittered_dur.count()); # random jittering
+	E_jitter.set_duration(fix_jittered_dur[jitter_i] - 4); # @slack approach
 	E_gabor.set_deltat(fix_jittered_dur[jitter_i] - 4); # @slack approach, change the deltat because has changed also for the jittering
-	E_fix_jitter.set_port_code(FIX_JITTER_TRIGGER + jitter_i); # send trigger
+	E_jitter.set_port_code(FIX_TRIGGER + jitter_i); # send trigger
 	
 	/* TARGET, MASK and PROBE */
 	
 	if (TRIAL_i[TRIAL_TYPE] == "valid") then /* Check if the trial is VALID */
 		int trial_ori = int(TRIAL_i[ORIS]); # select the image (orientation) for that trial
+		E_gabor.set_port_code(ORI_TRIGGER + trial_ori);
 		P_gabor.set_part(1, gabor_images[trial_ori]); # set the image (right)
 		P_gabor.set_part(2, gabor_images[trial_ori]); # set the image (left)
 		
@@ -576,15 +604,16 @@ begin;
 			probe_ori = generate_different_ori(1, n_ori, trial_ori); # generate a random id that is not the same as the $trial_ori
 			P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
 			E_probe.set_target_button(change_key); # this set the correct answer and key for that trial
-			E_probe.set_port_code(PROBE_TRIGGER + probe_ori); 
+			E_probe.set_port_code(ORI_TRIGGER + probe_ori); 
 		else
 			E_probe.set_target_button(nochange_key); # this set the correct answer and key for that trial
 			probe_ori = trial_ori; # probe orientation is the same
 			P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
-			E_probe.set_port_code(PROBE_TRIGGER + probe_ori); # this set the correct answer and key for that trial
+			E_probe.set_port_code(ORI_TRIGGER + probe_ori); # this set the correct answer and key for that trial
 		end;
 		
 	else
+		E_gabor.set_port_code(CATCH_TRIGGER);
 		E_gabor.set_response_active(false); # this turns the target (now masks) not as target active
 		E_gabor.set_target_button(empty_target_button); # remove target buttons
 		P_gabor.set_part(1, mask_image); # set the image (right)
@@ -604,12 +633,7 @@ begin;
 	
 	### TRIALS
 	
-	#T_fixation.present();
-	#T_cue.present();
-	#T_fix_jitter.present();
-	#T_target_mask.present();
-	#T_retention.present();
-	
+	### TODO check if this approach with trials works
 	T_main.present();
 		
 	/* Collecting PROBE Response */
@@ -633,30 +657,50 @@ begin;
 	/* End PAS Response */
 	
 	/* Collecting DET Response and RT */
+	
+	response_manager.set_port_output(false);
 
 	int start_det = clock.time();
 	int det_resp = det_task();
-	term.print(string(det_resp) + "\n");
+	
 	int det_rt = response_manager.last_response_data().time() - start_det;
 	
 	# check det accuracy
-	int det_acc = 0; # 99
+	int det_acc = 0;
+	int det_resp_code = det_wrong_response + det_resp; # general trigger for wrong det response + pressed orientation
 	
 	if int(TRIAL_i[ORIS]) == det_resp then
 		det_acc = 1;
+		det_resp_code = det_corr_response + det_resp; # general trigger for wrong det response + pressed orientation (overwrite wrong if correct)
 	end;
 	
-	# log the accuracy in the next trial
+	/* Send Manual Trigger */
 	
+	manual_port.send_code(det_resp_code); # send manual code for det response
+
+	response_manager.set_port_output(true);
+	
+	/* ITI */
+	
+	T_iti.present();
 	
 	/* Saving Data */
 	
-	#outfile.print("subject\ age\ gender\ cue\ oris\ trial_type\ probe_ori\ change \ probe_acc\ probe_rt\ probe_resp\ pas_resp\ pas_rt\ det_resp\ det_rt\ det_acc" + "\n");   # this create a space separated header
-
-	outfile.print(string(Participant) + " " + string(Age) + " " + Gender + " " + TRIAL_i[CUE] + " " + TRIAL_i[ORIS] + " " + TRIAL_i[TRIAL_TYPE] + " " + string(probe_ori) + " " + TRIAL_i[CHANGE] + " " + 
-						string(probe_acc) + " " + string(probe_rt) + " " + probe_resp + " " + pas_resp + " " + string(pas_rt) + " " + string(det_resp)+ " " + string(det_rt) + " " + string(det_acc) + "\n");
+	string trial_ori_image = "0"; # preallocate the variable, if correct change the value
+	
+	if (TRIAL_i[TRIAL_TYPE] == "valid") then
+		trial_ori_image = IMAGE_NAMES[int(TRIAL_i[ORIS])];  # get the target image
+	end;
+	
+	string det_image = IMAGE_NAMES[det_resp]; # get the det pressed image
+	
+	outfile.print(string(Participant) + " " + string(Age) + " " + Gender + " " + TRIAL_i[CUE] + " " + TRIAL_i[ORIS] + " " + trial_ori_image + " " + TRIAL_i[TRIAL_TYPE] + " " + string(probe_ori) + " " + TRIAL_i[CHANGE] + " " + 
+						string(probe_acc) + " " + string(probe_rt) + " " + probe_resp + " " + pas_resp + " " + string(pas_rt) + " " + string(det_resp)+ " " + det_image + " " + string(det_rt) + " " + string(det_acc) + "\n");
 		
 	/* Trial counter */
 	trial_count = trial_count + 1;
 	
 end;
+
+P_message.set_part(1, TXT_end); # end message
+T_message.present();

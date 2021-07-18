@@ -5,13 +5,9 @@
 - Triggers can be from 1 to 253
 - the 254 code is for start the recording
 
-### Codes
+## From Maya Notes
 
-- cue: target side --> 50 (left); 59 (right);
-- target: orientations --> 100 + ori; 199 = catch
-- probe: orientations --> 200 + ori; 
-- response: correct ; wrong
-- pas: pas1 = 11, pas2 = 12, pas3 = 13, pas4 = 14
+- start_recording_trial -> is for sending the initial trigger
 
 ## Response Matching
 
@@ -32,28 +28,34 @@ So in my case:
 
 ## Triggers
 
-- 254 = start recording
-- Responses (trigger, name, key):
-	- 11, pas1, 1
-	- 12, pas2, 2
-	- 13, pas3, 3
-	- 14, pas4, 4
-	- 20, correct
-	- 29, wrong
-	- 99, space
-- Cue:
-	- 50 = left
-	- 59 = right
-- Fix Jitter
-	- 61 = 350
-	- 62 = 400
-	- 63 = 450
-	- 64 = 500
-- Target
-	- 100 + orientation (e.g. 101 = orientations 1) = valid
-	- 199 = catch
-- Probe
-	- 200 + orientation
+- start recording: 254
+- Fix: 40
+- cue:
+	- 30 = left
+	- 39 = right
+- Fix Jitter:
+	- 41 = 350 ms
+	- 42 = 400 ms
+	- 43 = 450 ms
+	- 44 = 500 ms
+- target: 
+	valid = 100 + orientation
+	catch = 199
+- probe:
+	- 100 + orientation
+	- response:
+		- correct = 10
+		- wrong = 19
+- pas: 
+	- pas1 = 11
+	- pas2 = 12
+	- pas3 = 13
+	- pas4 = 14
+
+- det:
+	- response:
+		- correct = 150 + orientation
+		- wrong = 200 + orientation
 
 # TODO
 
