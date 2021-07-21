@@ -31,17 +31,6 @@ exp_trials <- rbind(valid_trials, catch_trials)
 # Test for triggers
 
 exp_trials %>% 
-
-    # TRIGGERS MUTATE
-
-    mutate(cue_trigger = ifelse(cue == "left", 30, 39),
-           target_trigger = ifelse(trial_type == "valid",
-                                   100 + target_orientation,
-                                   199)) -> exp_trials
-
-# This write the main condition file
-
-exp_trials %>% 
     write.table(., file = "exp_cond.txt",
                 sep = ",", # separator
                 eol = ",", # for having all in a single line sep

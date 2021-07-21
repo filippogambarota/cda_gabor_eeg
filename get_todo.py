@@ -17,7 +17,7 @@ for line in target_lines:
 
 # Write the todo file
 
-todo_file = open('TODO.txt','w')
+todo_file = open('files/TODO.txt','w')
 
 # Write header
 

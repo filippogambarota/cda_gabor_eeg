@@ -1,0 +1,5 @@
+TODO file: Updated 21/07/2021 16:56:40
+
+
+Line 213### TODO fix the 1 trigger after fixation
+Line 649		### TODO check if this approach with trials works

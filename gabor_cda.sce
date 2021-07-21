@@ -27,7 +27,7 @@ default_text_color = 255,255,255; # text to black default
 /* Response setup */
 
 active_buttons = 8; # the number is the number of activated input buttons (i.e. keys)
-button_codes = 11, 12, 13, 14, 10, 19, 99, 99; # these are codes for triggers associated with each button
+button_codes = 151, 152, 153, 154, 140, 145, 99, 250; # these are codes for triggers associated with each button
 
 /* STARTING SDL ################################################################## */
 
@@ -43,6 +43,14 @@ text {
 	caption = "Welcome to this experiment! It will be very funny!!! :) \n 
 					Press the spacebar when you want to start!";
 } TXT_welcome;
+
+text {
+	caption = "This is the practice!";
+} TXT_practice;
+
+text {
+	caption = "Now the experiment start";
+} TXT_experiment;
 
 text {
 	caption = "You can take a pause! \n press the spacebar to continue!";
@@ -111,7 +119,8 @@ picture {
 } P_fixation;
 
 picture {
-	text {caption = "";};
+	#text {caption = "";};
+	text TXT_fix_cross;
 	x = 0; y = 0;
 } P_jitter_empty;
 
@@ -198,7 +207,7 @@ trial {
 	terminator_button = 7; # ends only with space
 	stimulus_event{
 		picture P_message;
-		response_active = false;
+		response_active = true;
 	} E_message;
 } T_message;
 
@@ -208,6 +217,7 @@ trial {
 	stimulus_event {
 		picture P_fixation;
 		code = "fixation";
+		deltat= 0;
 		duration = 496; # ~ 500ms - ifi/2
 	} E_fixation;
 	
@@ -391,23 +401,28 @@ int ORIS = 2; # orientations (are indexes for the amount of available orientatio
 int TRIAL_TYPE = 3; # trial type "catch" or "valid"
 int CHANGE = 4; # if the probe gabor is the same or different
 int CUE_TRIGGER = 5; # which cue trigger
-int TARGET_TRIGGER = 6; # which target trigger
+#int TARGET_TRIGGER = 6; # which target trigger
 
 /* General variables for the experiment */
 
 # Triggers value 
 
-int ORI_TRIGGER = 100; # this is the general code for the probe trigger
-int FIX_TRIGGER = 40; # this is the general code for the fixation jitter trigger
-int LEFT_CUE_TRIGGER = 30;
-int RIGHT_CUE_TRIGGER = 39;
-int CATCH_TRIGGER = 199;
-int det_corr_response = 150; # code for the correct response
-int det_wrong_response = 200; # code for the wrong response
+int TRIAL_NUMBER_TRIGGER = 0; # create and then update within the script
+int FIX_TRIGGER = 0; # the fixation index also the trial number within a block
+int LEFT_CUE_TRIGGER = 102;
+int RIGHT_CUE_TRIGGER = 103;
+int JITTER_TRIGGER = 104;
+int TARGET_TRIGGER = 100; # this is the general code for the probe trigger
+int CATCH_TRIGGER = 198;
+int MASK_TRIGGER = 199;
+int RETENTION_TRIGGER = 200; # 200 + block number
+int PROBE_TRIGGER = 130;
+int DET_CORRECT_TRIGGER = 160; # code for the correct response
+int DET_WRONG_TRIGGER = 180; # code for the wrong response
 
 # Other variables
 int n_ori = gabor_images.count(); # number of orientations
-int pause_trial = 5; # number of trials for the pause
+int pause_trial = 4; # number of trials for the pause
 array <int> empty_target_button[0]; # this is for setting no target buttons
 int probe_ori = 999;
 array <int> fix_jittered_dur[4] = {350, 400, 450, 500}; # jittered time for fixation
@@ -534,6 +549,174 @@ sub
 	return ii;
 end;
 
+## Experiment sub routine
+
+sub
+run_experiment(string type, int tot_trials)
+begin
+	
+	/* Experiment loop */
+
+	int trial_count_block = 1; # counter for trials within the block
+	int nblock = 1; # counter for the number of blocks
+	int exp_trials = TRIALS.count();
+	
+	/* Setup Practice */
+	
+	if type == "practice" then
+		nblock = 0;
+		exp_trials = tot_trials;
+	end;
+	
+	loop int trial_count = 1 until trial_count > exp_trials 
+	begin;
+
+		array <string> TRIAL_i[ncond] = TRIALS[trial_count]; # get the current trial as array
+		
+		/* Setting TRIGGERS */
+		
+		# These are triggers that can be set before. Responses are set later
+		FIX_TRIGGER = trial_count_block; # the fixation index the trial count within the block
+		E_fixation.set_port_code(FIX_TRIGGER);
+		
+		/* Setting CUE and Jitter */
+		# the cue trigger is sent with the jittering and vice-versa
+		
+		int jitter_i = random(1, fix_jittered_dur.count()); # random jittering
+		E_cue.set_port_code(JITTER_TRIGGER + jitter_i); # send trigger
+		
+		if (TRIAL_i[CUE] == "left") then
+			E_jitter.set_port_code(LEFT_CUE_TRIGGER);
+			P_cue.set_part(2, cue_left); 
+			P_cue.set_part(3, cue_left);
+		else
+			E_jitter.set_port_code(RIGHT_CUE_TRIGGER);
+			P_cue.set_part(2, cue_right);
+			P_cue.set_part(3, cue_right);
+		end;
+		
+		/* Setting Jittered Duration */
+		
+		E_jitter.set_duration(fix_jittered_dur[jitter_i] - 4); # @slack approach
+		E_gabor.set_deltat(fix_jittered_dur[jitter_i] - 4); # @slack approach, change the deltat because has changed also for the jittering
+		
+		/* TARGET, MASK RETENTION and PROBE */
+		
+		E_retention.set_port_code(RETENTION_TRIGGER + nblock); # setting the retention interval trigger + nblock
+		
+		if (TRIAL_i[TRIAL_TYPE] == "valid") then /* Check if the trial is VALID */
+			int trial_ori = int(TRIAL_i[ORIS]); # select the image (orientation) for that trial
+			E_gabor.set_port_code(TARGET_TRIGGER + trial_ori);
+			P_gabor.set_part(1, gabor_images[trial_ori]); # set the image (right)
+			P_gabor.set_part(2, gabor_images[trial_ori]); # set the image (left)
+			
+			if (TRIAL_i[CHANGE] == "yes") then /* Check if PROBE CHANGE */
+				probe_ori = generate_different_ori(1, n_ori, trial_ori); # generate a random id that is not the same as the $trial_ori
+				P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
+				E_probe.set_target_button(change_key); # this set the correct answer and key for that trial
+				E_probe.set_port_code(PROBE_TRIGGER + probe_ori); 
+			else
+				E_probe.set_target_button(nochange_key); # this set the correct answer and key for that trial
+				probe_ori = trial_ori; # probe orientation is the same
+				P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
+				E_probe.set_port_code(PROBE_TRIGGER + probe_ori); # this set the correct answer and key for that trial
+			end;
+			
+		else
+			E_gabor.set_port_code(CATCH_TRIGGER);
+			E_gabor.set_response_active(false); # this turns the target (now masks) not as target active
+			E_gabor.set_target_button(empty_target_button); # remove target buttons
+			P_gabor.set_part(1, mask_image); # set the image (right)
+			P_gabor.set_part(2, mask_image); # set the image (left)
+			probe_ori = random(1, n_ori);
+			P_probe.set_part(1, gabor_images[probe_ori]);
+		end;
+		
+		### Actual TRIALS presentation
+		
+		/* Check if PAUSE */
+		
+		if (trial_count_block == pause_trial + 1) then
+			trial_count_block = 0; # reset trial counter for blocks
+			nblock = nblock + 1; # increase block number
+			response_manager.set_port_output(false);
+			P_message.set_part(1, TXT_pause); # pause message
+			T_message.present();
+			response_manager.set_port_output(true);
+		end;
+		
+		### TRIALS
+		
+		### TODO check if this approach with trials works
+		T_main.present();
+			
+		/* Collecting PROBE Response */
+		
+		T_probe.present();
+		
+		stimulus_data probe_event = stimulus_manager.last_stimulus_data();
+		
+		int probe_acc = get_acc_event(probe_event); # get the accuracy for the event
+		string probe_resp = resp_array[probe_event.button()]; # get the change/no change response
+		int probe_rt = probe_event.reaction_time(); # get reaction times
+		
+		/* Collecting PAS Response */
+		
+		T_pas.present();
+		
+		stimulus_data pas_event = stimulus_manager.last_stimulus_data();
+		int pas_rt = pas_event.reaction_time();
+		string pas_resp = resp_array[pas_event.button()]; # get the pas response
+		
+		/* End PAS Response */
+		
+		/* Collecting DET Response and RT */
+		
+		response_manager.set_port_output(false);
+
+		int start_det = clock.time();
+		int det_resp = det_task();
+		
+		int det_rt = response_manager.last_response_data().time() - start_det;
+		
+		# check det accuracy
+		int det_acc = 0;
+		int det_resp_code = DET_WRONG_TRIGGER + det_resp; # general trigger for wrong det response + pressed orientation
+		
+		if int(TRIAL_i[ORIS]) == det_resp then
+			det_acc = 1;
+			det_resp_code = DET_CORRECT_TRIGGER + det_resp; # general trigger for wrong det response + pressed orientation (overwrite wrong if correct)
+		end;
+		
+		/* Send Manual Trigger */
+		
+		manual_port.send_code(det_resp_code); # send manual code for det response
+
+		response_manager.set_port_output(true);
+		
+		/* ITI */
+		
+		T_iti.present();
+		
+		/* Saving Data */
+		
+		string trial_ori_image = "0"; # preallocate the variable, if correct change the value
+		
+		if (TRIAL_i[TRIAL_TYPE] == "valid") then
+			trial_ori_image = IMAGE_NAMES[int(TRIAL_i[ORIS])];  # get the target image
+		end;
+		
+		string det_image = IMAGE_NAMES[det_resp]; # get the det pressed image
+		
+		outfile.print(string(Participant) + " " + string(Age) + " " + Gender + " " + TRIAL_i[CUE] + " " + TRIAL_i[ORIS] + " " + trial_ori_image + " " + TRIAL_i[TRIAL_TYPE] + " " + string(probe_ori) + " " + TRIAL_i[CHANGE] + " " + 
+							string(probe_acc) + " " + string(probe_rt) + " " + probe_resp + " " + pas_resp + " " + string(pas_rt) + " " + string(det_resp)+ " " + det_image + " " + string(det_rt) + " " + string(det_acc) + "\n");
+		
+		/* Trial counters */
+		trial_count = trial_count + 1;
+		trial_count_block = trial_count_block + 1;
+	end;
+end;
+
 ##############################################################################################################
 ###############################    STARTING THE EXPERIMENT     ###############################################
 ##############################################################################################################
@@ -550,157 +733,28 @@ TRIALS.shuffle(); # This randomize the order of the array
 string wri = write_experiment_file(out_exp_trials, cond_names, ntrials, TRIALS);
 
 /* Welcome screen */
-
 P_message.set_part(1, TXT_welcome); # welcome message that use the txt object and the empty message picture
-
 T_message.present();
 
-/* Start Recording */
+/* Practice screen */
+P_message.set_part(1, TXT_practice); # welcome message that use the txt object and the empty message picture
+T_message.present();
 
+/* Practice screen */
+P_message.set_part(1, TXT_experiment); # welcome message that use the txt object and the empty message picture
+T_message.present();
+
+/* Starting Experiment Screen */
+
+/* Start Recording */
 T_start_recording.present();
 
-/* Experiment loop */
+/* Practice */
+run_experiment("practice", 3); # practice with 3 trials
 
-loop int trial_count = 1 until trial_count > TRIALS.count() 
-begin;
+/* Experiment */
+run_experiment("experiment", 0); # full experiment 0 = all trials
 
-	array <string> TRIAL_i[ncond] = TRIALS[trial_count]; # get the current trial as array
-	
-	/* Setting TRIGGERS */
-	
-	# These are triggers that can be set before. Responses are set later
-	E_fixation.set_port_code(FIX_TRIGGER);
-	
-	/* Setting CUE */
-	
-	if (TRIAL_i[CUE] == "left") then
-		E_cue.set_port_code(LEFT_CUE_TRIGGER);
-		# setting the cue direction
-		P_cue.set_part(2, cue_left); 
-		P_cue.set_part(3, cue_left);
-	else
-		E_cue.set_port_code(RIGHT_CUE_TRIGGER);
-		# setting the cue direction
-		P_cue.set_part(2, cue_right);
-		P_cue.set_part(3, cue_right);
-	end;
-	
-	/* Setting Jittered Fixation */
-	
-	int jitter_i = random(1, fix_jittered_dur.count()); # random jittering
-	E_jitter.set_duration(fix_jittered_dur[jitter_i] - 4); # @slack approach
-	E_gabor.set_deltat(fix_jittered_dur[jitter_i] - 4); # @slack approach, change the deltat because has changed also for the jittering
-	E_jitter.set_port_code(FIX_TRIGGER + jitter_i); # send trigger
-	
-	/* TARGET, MASK and PROBE */
-	
-	if (TRIAL_i[TRIAL_TYPE] == "valid") then /* Check if the trial is VALID */
-		int trial_ori = int(TRIAL_i[ORIS]); # select the image (orientation) for that trial
-		E_gabor.set_port_code(ORI_TRIGGER + trial_ori);
-		P_gabor.set_part(1, gabor_images[trial_ori]); # set the image (right)
-		P_gabor.set_part(2, gabor_images[trial_ori]); # set the image (left)
-		
-		if (TRIAL_i[CHANGE] == "yes") then /* Check if PROBE CHANGE */
-			probe_ori = generate_different_ori(1, n_ori, trial_ori); # generate a random id that is not the same as the $trial_ori
-			P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
-			E_probe.set_target_button(change_key); # this set the correct answer and key for that trial
-			E_probe.set_port_code(ORI_TRIGGER + probe_ori); 
-		else
-			E_probe.set_target_button(nochange_key); # this set the correct answer and key for that trial
-			probe_ori = trial_ori; # probe orientation is the same
-			P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
-			E_probe.set_port_code(ORI_TRIGGER + probe_ori); # this set the correct answer and key for that trial
-		end;
-		
-	else
-		E_gabor.set_port_code(CATCH_TRIGGER);
-		E_gabor.set_response_active(false); # this turns the target (now masks) not as target active
-		E_gabor.set_target_button(empty_target_button); # remove target buttons
-		P_gabor.set_part(1, mask_image); # set the image (right)
-		P_gabor.set_part(2, mask_image); # set the image (left)
-		probe_ori = random(1, n_ori);
-		P_probe.set_part(1, gabor_images[probe_ori]);
-	end;
-	
-	### Actual TRIALS presentation
-	
-	/* Check if PAUSE */
-	
-	if (mod(trial_count, pause_trial) == 0) then
-		P_message.set_part(1, TXT_pause); # pause message
-		T_message.present();
-	end;
-	
-	### TRIALS
-	
-	### TODO check if this approach with trials works
-	T_main.present();
-		
-	/* Collecting PROBE Response */
-	
-	T_probe.present();
-	
-	stimulus_data probe_event = stimulus_manager.last_stimulus_data();
-	
-	int probe_acc = get_acc_event(probe_event); # get the accuracy for the event
-	string probe_resp = resp_array[probe_event.button()]; # get the change/no change response
-	int probe_rt = probe_event.reaction_time(); # get reaction times
-	
-	/* Collecting PAS Response */
-	
-	T_pas.present();
-	
-	stimulus_data pas_event = stimulus_manager.last_stimulus_data();
-	int pas_rt = pas_event.reaction_time();
-	string pas_resp = resp_array[pas_event.button()]; # get the pas response
-	
-	/* End PAS Response */
-	
-	/* Collecting DET Response and RT */
-	
-	response_manager.set_port_output(false);
-
-	int start_det = clock.time();
-	int det_resp = det_task();
-	
-	int det_rt = response_manager.last_response_data().time() - start_det;
-	
-	# check det accuracy
-	int det_acc = 0;
-	int det_resp_code = det_wrong_response + det_resp; # general trigger for wrong det response + pressed orientation
-	
-	if int(TRIAL_i[ORIS]) == det_resp then
-		det_acc = 1;
-		det_resp_code = det_corr_response + det_resp; # general trigger for wrong det response + pressed orientation (overwrite wrong if correct)
-	end;
-	
-	/* Send Manual Trigger */
-	
-	manual_port.send_code(det_resp_code); # send manual code for det response
-
-	response_manager.set_port_output(true);
-	
-	/* ITI */
-	
-	T_iti.present();
-	
-	/* Saving Data */
-	
-	string trial_ori_image = "0"; # preallocate the variable, if correct change the value
-	
-	if (TRIAL_i[TRIAL_TYPE] == "valid") then
-		trial_ori_image = IMAGE_NAMES[int(TRIAL_i[ORIS])];  # get the target image
-	end;
-	
-	string det_image = IMAGE_NAMES[det_resp]; # get the det pressed image
-	
-	outfile.print(string(Participant) + " " + string(Age) + " " + Gender + " " + TRIAL_i[CUE] + " " + TRIAL_i[ORIS] + " " + trial_ori_image + " " + TRIAL_i[TRIAL_TYPE] + " " + string(probe_ori) + " " + TRIAL_i[CHANGE] + " " + 
-						string(probe_acc) + " " + string(probe_rt) + " " + probe_resp + " " + pas_resp + " " + string(pas_rt) + " " + string(det_resp)+ " " + det_image + " " + string(det_rt) + " " + string(det_acc) + "\n");
-		
-	/* Trial counter */
-	trial_count = trial_count + 1;
-	
-end;
-
+/* Goodbye */
 P_message.set_part(1, TXT_end); # end message
 T_message.present();

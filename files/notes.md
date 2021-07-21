@@ -28,34 +28,38 @@ So in my case:
 
 ## Triggers
 
+
 - start recording: 254
-- Fix: 40
-- cue:
-	- 30 = left
-	- 39 = right
+- Trials = 1:100 (at maximum)
+- Fix: 101
+- Cue:
+	- 102 = left
+	- 103 = right
 - Fix Jitter:
-	- 41 = 350 ms
-	- 42 = 400 ms
-	- 43 = 450 ms
-	- 44 = 500 ms
+	- 104 = 300 ms
+	- 105 = 350 ms
+	- 106 = 400 ms
+	- 107 = 450 ms
+	- 108 = 500 ms
 - target: 
-	valid = 100 + orientation
+	valid = 110 + orientation (11)
 	catch = 199
+- retention: 200
 - probe:
-	- 100 + orientation
+	- 130 + orientation
 	- response:
-		- correct = 10
-		- wrong = 19
+		- correct = 140
+		- wrong = 149
 - pas: 
-	- pas1 = 11
-	- pas2 = 12
-	- pas3 = 13
-	- pas4 = 14
+	- pas1 = 151
+	- pas2 = 152
+	- pas3 = 153
+	- pas4 = 154
 
 - det:
 	- response:
-		- correct = 150 + orientation
-		- wrong = 200 + orientation
+		- correct = 160 + orientation
+		- wrong = 180 + orientation
 
 # TODO
 
