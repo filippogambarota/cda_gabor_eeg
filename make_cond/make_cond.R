@@ -2,35 +2,41 @@
 
 library(tidyverse)
 
-# Generate Conditions
+# Packages
 
-cue <- c("left", "right")
-target_orientation <- 1:11 # all orientations
+library(tidyverse)
+
 change <- c("yes", "no")
-ntrials <- 1
-ncatch <- 10 # need to be a multiple of 2 number
+cue <- c("left", "right") 
+norientations <- 6
+which_change <- c("clock", "anti")
+nrep <- 1
+ncatch <- 10 # multiple of 2
 
-valid_trials <- expand_grid(
-    cue,
-    target_orientation,
-    trial_type = "valid",
-    change,
-    trial = 1:ntrials
-)
+valid <- tidyr::expand_grid(cue, 
+                            target = 1:norientations, 
+                            trial_type = "valid",
+                            change,
+                            rep = 1:nrep,
+                            which_change)
 
-catch_trials <- expand_grid(
-    cue,
-    target_orientation = 0,
-    trial_type = "catch",
-    change = 0,
-    trial = 1:(ncatch/2) # for having the exact number of catch
-)
+catch <- tidyr::expand_grid(cue,
+                            target = 0,
+                            trial_type = "catch",
+                            change = "0", 
+                            rep = 1:(ncatch/2),
+                            which_change = "0")
 
-exp_trials <- rbind(valid_trials, catch_trials)
+experiment <- bind_rows(valid, catch) %>% 
+    select(-rep) %>% 
+    mutate(probe = case_when(
+        which_change == "anti" & target > 1 ~ target - 1,
+        which_change == "anti" & target == 1 ~ norientations,
+        which_change == "clock" & target < norientations ~ target + 1,
+        which_change == "clock" & target == norientations ~ 1,
+        TRUE ~ 0))
 
-# Test for triggers
-
-exp_trials %>% 
+experiment %>% 
     write.table(., file = "exp_cond.txt",
                 sep = ",", # separator
                 eol = ",", # for having all in a single line sep
@@ -41,5 +47,5 @@ exp_trials %>%
 
 # This write the colnames string
 
-colnames(exp_trials) %>% 
+colnames(experiment) %>% 
     cat(., file = "cond_names.txt", sep = ",")

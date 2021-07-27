@@ -89,8 +89,10 @@ array {
 
 # this loop create the mock images array for the pcl part for the det task
 
+$ndet = 11;
+
 array {
-   LOOP $i $ngabors;
+   LOOP $i $ndet;
    $k = '$i + 1';
    bitmap { filename = ""; preload = false;};
    ENDLOOP;
@@ -364,11 +366,30 @@ string det_path = "det_stimuli" + "/"; # the general folder for gabors
 
 # Array with images. The order is also for the DET response
 
-array <string> IMAGE_NAMES[gabor_images.count()] = {
-	"gabor_285.tiff", "gabor_300.tiff", "gabor_315.tiff", "gabor_330.tiff", "gabor_345.tiff", # left side --> anticlockwise
-	"gabor_0.tiff", # center
-	"gabor_15.tiff", "gabor_30.tiff", "gabor_45.tiff", "gabor_60.tiff", "gabor_75.tiff" # right side --> anticlockwise
+array <string> IMAGE_NAMES_TARGET[gabor_images.count()] = {
+	"gabor_15.tiff", "gabor_45.tiff", "gabor_75.tiff", "gabor_105.tiff", "gabor_135.tiff", "gabor_165.tiff"
 };
+
+### TODO Check how to automatize this
+
+array <string> IMAGE_NAMES_DET[gabor_images.count()] = {
+	"gabor_0.tiff", "gabor_5.tiff", "gabor_10.tiff", "gabor_15.tiff", "gabor_20.tiff", 
+	"gabor_25.tiff", "gabor_30.tiff", "gabor_35.tiff", "gabor_40.tiff", "gabor_45.tiff",
+	"gabor_50.tiff", "gabor_55.tiff", "gabor_60.tiff", "gabor_65.tiff", "gabor_70.tiff",
+	"gabor_75.tiff", "gabor_80.tiff", "gabor_85.tiff", "gabor_95.tiff", "gabor_100.tiff",
+	"gabor_105.tiff", "gabor_110.tiff", "gabor_115.tiff", "gabor_120.tiff", "gabor_125.tiff",
+	"gabor_130.tiff", "gabor_135.tiff", "gabor_140.tiff", "gabor_145.tiff", "gabor_150.tiff",
+	"gabor_155.tiff", "gabor_160.tiff", "gabor_165.tiff", "gabor_170.tiff", "gabor_175.tiff"
+};
+
+array <int> IMAGE_INDEX_TARGET[gabor_images.count()] = {
+	4, 10, 16, 21, 27, 33
+};
+
+array <int> IMAGE_INDEX_DET[det_images.count()] = {
+	18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 
+	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
+}
 
 # This read and load the images using the path and the IMAGE_NAMES array
 
@@ -386,11 +407,13 @@ end;
 
 int resize_det_factor = 1;
 
+### TODO check if the indexing works
+
 loop int i = 1 until i > det_images.count()
 begin
-	det_images[i].set_filename(det_path + IMAGE_NAMES[i]);
-	det_images[i].set_load_size(0,0,resize_det_factor); # resize images. if 1 the size is the same as the file
-	det_images[i].load();
+	det_images[IMAGE_INDEX_DET[i]].set_filename(det_path + IMAGE_NAMES[i]);
+	det_images[IMAGE_INDEX_DET[i]].set_load_size(0,0,resize_det_factor); # resize images. if 1 the size is the same as the file
+	det_images[IMAGE_INDEX_DET[i]].load();
 	i = i + 1;
 end;
 
@@ -400,8 +423,8 @@ int CUE = 1; # cue direction "left" or "right"
 int ORIS = 2; # orientations (are indexes for the amount of available orientations, for the array of images)
 int TRIAL_TYPE = 3; # trial type "catch" or "valid"
 int CHANGE = 4; # if the probe gabor is the same or different
-int CUE_TRIGGER = 5; # which cue trigger
-#int TARGET_TRIGGER = 6; # which target trigger
+int WHICH_CHANGE = 5; # clock or anticlockwise rotation
+int PROBE = 6; # which target trigger
 
 /* General variables for the experiment */
 
@@ -439,20 +462,43 @@ int tgt_width = 154; # the image width
 array <int> tgt_pos[n_ori][2] = {
 	# anticlockwise
 	
-	{-769, 111}, # 1
-	{-707, 323}, # 2
-	{-587, 509}, # 3
-	{-420, 654}, # 4
-	{-219, 746}, # 5
+	{-776, 35}, # 1
+	{-770, 104}, # 1
+	{-758, 173}, # 1
+	{-739, 240}, # 1
+	{-714, 305}, # 1
+	{-684, 368}, # 1
+	{-648, 428}, # 1
+	{-607, 484}, # 1
+	{-562, 537}, # 1
+	{-511, 585}, # 1
+	{-457, 629}, # 1
+	{-399, 667}, # 1
+	{-337, 700}, # 1
+	{-273, 727}, # 1
+	{-207, 749}, # 1
+	{-139, 765}, # 1
+	{-70, 774}, # 1
+	{0, 777}, # 1
+	{70, 774}, # 1
+	{139, 765}, # 1
+	{207, 749}, # 1
+	{273, 727}, # 1
+	{337, 700}, # 1
+	{399, 667}, # 1
+	{457, 629}, # 1
+	{511, 585}, # 1
+	{562, 537}, # 1
+	{607, 484}, # 1
+	{648, 428}, # 1
+	{683, 368}, # 1
+	{714, 305}, # 1
+	{739, 240}, # 1
+	{758, 173}, # 1
+	{770, 104}, # 1
+	{776, 35}, # 1
 	
-	{0, 777},    # 6 center
 	
-	# clockwise
-	{219, 746},  # 7
-	{420, 654},  # 8
-	{587, 509},  # 9
-	{707, 323},  # 10
-	{769, 111}   # 11
 };
 
 # Setting coordinates for the picture objects according to the tgt pos array
@@ -611,7 +657,8 @@ begin
 			P_gabor.set_part(2, gabor_images[trial_ori]); # set the image (left)
 			
 			if (TRIAL_i[CHANGE] == "yes") then /* Check if PROBE CHANGE */
-				probe_ori = generate_different_ori(1, n_ori, trial_ori); # generate a random id that is not the same as the $trial_ori
+				#probe_ori = generate_different_ori(1, n_ori, trial_ori); # generate a random id that is not the same as the $trial_ori
+				probe_ori = TRIAL_i[PROBE]
 				P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
 				E_probe.set_target_button(change_key); # this set the correct answer and key for that trial
 				E_probe.set_port_code(PROBE_TRIGGER + probe_ori); 
@@ -683,7 +730,9 @@ begin
 		int det_acc = 0;
 		int det_resp_code = DET_WRONG_TRIGGER + det_resp; # general trigger for wrong det response + pressed orientation
 		
-		if int(TRIAL_i[ORIS]) == det_resp then
+		### TODO check if the indexing works
+		
+		if IMAGE_INDEX_TARGET[int(TRIAL_i[ORIS])] == det_resp then
 			det_acc = 1;
 			det_resp_code = DET_CORRECT_TRIGGER + det_resp; # general trigger for wrong det response + pressed orientation (overwrite wrong if correct)
 		end;

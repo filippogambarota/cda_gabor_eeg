@@ -1,1 +1,1 @@
-cue,target_orientation,trial_type,change,trial,cue_trigger,target_trigger
+cue,target,trial_type,change,which_change,probe
