@@ -22,11 +22,10 @@ rotate_point <- function(circ, angle, x_origin = 0, y_origin= 0){
     return(circ)
 }
 
-circ <- circ_point(777, 35, 0, 0, 180)
+circ <- circ_point(800, 35, 0, 0, 180)
 circ$id <- 1:nrow(circ)
 
-circ[, "x"] %>% 
-    write.table(., file = "coord_x.txt",
+write.table(circ[, "x"] , file = "coord_x.txt",
                 sep = ",", # separator
                 eol = ",", # for having all in a single line sep
                 col.names = FALSE, 
@@ -34,8 +33,7 @@ circ[, "x"] %>%
                 fileEncoding = "UTF8", 
                 quote = FALSE) # for presentation string
 
-circ[, "y"] %>% 
-    write.table(., file = "coord_y.txt",
+write.table(circ[, "y"], file = "coord_y.txt",
                 sep = ",", # separator
                 eol = ",", # for having all in a single line sep
                 col.names = FALSE, 
