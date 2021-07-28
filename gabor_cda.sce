@@ -294,7 +294,7 @@ trial {
 } T_det;
 
 trial {
-	trial_duration = 1000;
+	trial_duration = 500;
 	stimulus_event{
 		picture P_blank;
 	} E_iti;
@@ -406,7 +406,7 @@ end;
 
 # This read and load the images using the path and the IMAGE_NAMES array for the det task
 
-double resize_det_factor = 0.4;
+double resize_det_factor = 0.5;
 
 ### TODO check if the indexing works
 
@@ -462,45 +462,17 @@ double tgt_width = 154 * resize_det_factor; # the image width
 
 # DET gabors array with positions
 
-array <int> tgt_pos[det_images.count()][2] = {
-	# anticlockwise
-	
-	{-776, 35}, # 1
-	{-770, 104}, # 1
-	{-758, 173}, # 1
-	{-739, 240}, # 1
-	{-714, 305}, # 1
-	{-684, 368}, # 1
-	{-648, 428}, # 1
-	{-607, 484}, # 1
-	{-562, 537}, # 1
-	{-511, 585}, # 1
-	{-457, 629}, # 1
-	{-399, 667}, # 1
-	{-337, 700}, # 1
-	{-273, 727}, # 1
-	{-207, 749}, # 1
-	{-139, 765}, # 1
-	{-70, 774}, # 1
-	{0, 777}, # 1
-	{70, 774}, # 1
-	{139, 765}, # 1
-	{207, 749}, # 1
-	{273, 727}, # 1
-	{337, 700}, # 1
-	{399, 667}, # 1
-	{457, 629}, # 1
-	{511, 585}, # 1
-	{562, 537}, # 1
-	{607, 484}, # 1
-	{648, 428}, # 1
-	{683, 368}, # 1
-	{714, 305}, # 1
-	{739, 240}, # 1
-	{758, 173}, # 1
-	{770, 104}, # 1
-	{776, 35} # 1
-};
+array <int> coord_x[det_images.count()] = get_coordinates("make_cond/coord_x.txt");
+array <int> coord_y[det_images.count()] = get_coordinates("make_cond/coord_y.txt");
+
+array <int> tgt_pos[det_images.count()][2];
+
+loop int i = 1 until i > tgt_pos.count()
+begin
+	tgt_pos[i][1] = coord_x[i];
+	tgt_pos[i][2] = coord_y[i];
+	i = i + 1;
+end;
 
 # Setting coordinates for the picture objects according to the tgt pos array
 # and setting the full contrast gabors

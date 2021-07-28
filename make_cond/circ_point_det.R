@@ -22,7 +22,7 @@ rotate_point <- function(circ, angle, x_origin = 0, y_origin= 0){
     return(circ)
 }
 
-circ <- circ_point(800, 35, 0, 0, 180)
+circ <- circ_point(880, 35, 0, 0, 180)
 circ$id <- 1:nrow(circ)
 
 write.table(circ[, "x"] , file = "coord_x.txt",

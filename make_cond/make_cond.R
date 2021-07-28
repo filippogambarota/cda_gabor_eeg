@@ -1,10 +1,7 @@
 # Packages
 
-library(tidyverse)
-
-# Packages
-
-library(tidyverse)
+library(dplyr)
+library(tidyr)
 
 change <- c("yes", "no")
 cue <- c("left", "right") 

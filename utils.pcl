@@ -221,3 +221,20 @@ begin
 	string out = "done";
 	return out
 end;
+
+# read_coordinates
+
+sub
+   array <int, 1> get_coordinates(string path)
+begin
+	input_file coordfile = new input_file;
+	coordfile.open(path);
+	coordfile.set_delimiter(',');
+	array <int> coord[0];
+	loop until coordfile.end_of_file()
+	begin
+		coord.add(int(coordfile.get_line()));
+	end;
+	coordfile.close();
+	return coord
+end;
