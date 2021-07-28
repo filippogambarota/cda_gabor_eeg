@@ -21,7 +21,7 @@ response_matching = simple_matching;
 
 default_font_size = 46;
 default_font = "arial";
-default_background_color = 128, 128, 128; # grey color
+default_background_color = 127, 127, 127; # grey color
 default_text_color = 255,255,255; # text to black default
 
 /* Response setup */
@@ -78,7 +78,7 @@ arrow_graphic {
 
 # this loop create the mock images array for the pcl part
 
-$ngabors = 11;
+$ngabors = 6;
 
 array {
    LOOP $i $ngabors;
@@ -89,7 +89,7 @@ array {
 
 # this loop create the mock images array for the pcl part for the det task
 
-$ndet = 11;
+$ndet = 35;
 
 array {
    LOOP $i $ndet;
@@ -168,7 +168,8 @@ picture{
 	text {
 		caption = "+";
 		font_color = 0,0,0;
-		transparent_color = 128, 128, 128;
+		font_size = 25;
+		transparent_color = 127, 127, 127;
 	} cursor;
 	x = 0; y = 0;
 	on_top = true;
@@ -361,7 +362,7 @@ array<string> TRIALS[ntrials][ncond] = get_trial_2Darray(cond_file, ncond, ntria
 
 /* Importing and Loading Images */
 
-string subject_images_path = "S" + string(Participant) + "/"; # the current participant
+string subject_images_path = "s" + string(Participant) + "/"; # the current participant
 string det_path = "det_stimuli" + "/"; # the general folder for gabors
 
 # Array with images. The order is also for the DET response
@@ -372,7 +373,7 @@ array <string> IMAGE_NAMES_TARGET[gabor_images.count()] = {
 
 ### TODO Check how to automatize this
 
-array <string> IMAGE_NAMES_DET[gabor_images.count()] = {
+array <string> IMAGE_NAMES_DET[det_images.count()] = {
 	"gabor_0.tiff", "gabor_5.tiff", "gabor_10.tiff", "gabor_15.tiff", "gabor_20.tiff", 
 	"gabor_25.tiff", "gabor_30.tiff", "gabor_35.tiff", "gabor_40.tiff", "gabor_45.tiff",
 	"gabor_50.tiff", "gabor_55.tiff", "gabor_60.tiff", "gabor_65.tiff", "gabor_70.tiff",
@@ -389,7 +390,7 @@ array <int> IMAGE_INDEX_TARGET[gabor_images.count()] = {
 array <int> IMAGE_INDEX_DET[det_images.count()] = {
 	18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 
 	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
-}
+};
 
 # This read and load the images using the path and the IMAGE_NAMES array
 
@@ -397,7 +398,7 @@ int resize_im_factor = 1;
 
 loop int i = 1 until i > gabor_images.count()
 begin
-	gabor_images[i].set_filename(subject_images_path + IMAGE_NAMES[i]);
+	gabor_images[i].set_filename(subject_images_path + IMAGE_NAMES_TARGET[i]);
 	gabor_images[i].set_load_size(0,0,resize_im_factor); # resize images. if 1 the size is the same as the file
 	gabor_images[i].load();
 	i = i + 1;
@@ -405,13 +406,13 @@ end;
 
 # This read and load the images using the path and the IMAGE_NAMES array for the det task
 
-int resize_det_factor = 1;
+double resize_det_factor = 0.4;
 
 ### TODO check if the indexing works
 
 loop int i = 1 until i > det_images.count()
 begin
-	det_images[IMAGE_INDEX_DET[i]].set_filename(det_path + IMAGE_NAMES[i]);
+	det_images[IMAGE_INDEX_DET[i]].set_filename(det_path + IMAGE_NAMES_DET[i]);
 	det_images[IMAGE_INDEX_DET[i]].set_load_size(0,0,resize_det_factor); # resize images. if 1 the size is the same as the file
 	det_images[IMAGE_INDEX_DET[i]].load();
 	i = i + 1;
@@ -454,12 +455,14 @@ array <int> fix_jittered_dur[4] = {350, 400, 450, 500}; # jittered time for fixa
 
 # DET gabor size
 
-int tgt_height = 154; # the image height
-int tgt_width = 154; # the image width
+### TODO check the size of the target
+
+double tgt_height = 154 * resize_det_factor; # the image height
+double tgt_width = 154 * resize_det_factor; # the image width
 
 # DET gabors array with positions
 
-array <int> tgt_pos[n_ori][2] = {
+array <int> tgt_pos[det_images.count()][2] = {
 	# anticlockwise
 	
 	{-776, 35}, # 1
@@ -496,9 +499,7 @@ array <int> tgt_pos[n_ori][2] = {
 	{739, 240}, # 1
 	{758, 173}, # 1
 	{770, 104}, # 1
-	{776, 35}, # 1
-	
-	
+	{776, 35} # 1
 };
 
 # Setting coordinates for the picture objects according to the tgt pos array
@@ -506,10 +507,10 @@ array <int> tgt_pos[n_ori][2] = {
 
 int shift_y = 400; # vertical shift
 
-loop int i = 1 until i > gabor_images.count()
+loop int i = 1 until i > det_images.count()
 begin
 	tgt_pos[i][2] = tgt_pos[i][2] - shift_y; # we need also to modify the tgt_pos array for the mouse response
-	P_det.add_part(gabor_images[i], tgt_pos[i][1], tgt_pos[i][2]); # set all images and coordinates
+	P_det.add_part(det_images[i], tgt_pos[i][1], tgt_pos[i][2]); # set all images and coordinates
 	i = i + 1;
 end;
 
@@ -533,7 +534,7 @@ int mouse_key = 8;
 # Check if the pressed stimulus is a target https://www.neurobs.com/menu_support/menu_forums/view_thread?id=10296
 
 sub
-    bool on_target( int tgt_x, int tgt_y )
+    bool on_target( double tgt_x, double tgt_y )
 begin
     mse.poll();
     double curr_x = mse.x_position();
@@ -658,7 +659,7 @@ begin
 			
 			if (TRIAL_i[CHANGE] == "yes") then /* Check if PROBE CHANGE */
 				#probe_ori = generate_different_ori(1, n_ori, trial_ori); # generate a random id that is not the same as the $trial_ori
-				probe_ori = TRIAL_i[PROBE]
+				probe_ori = int(TRIAL_i[PROBE]);
 				P_probe.set_part(1, gabor_images[probe_ori]); # set the gabor
 				E_probe.set_target_button(change_key); # this set the correct answer and key for that trial
 				E_probe.set_port_code(PROBE_TRIGGER + probe_ori); 
@@ -732,10 +733,15 @@ begin
 		
 		### TODO check if the indexing works
 		
-		if IMAGE_INDEX_TARGET[int(TRIAL_i[ORIS])] == det_resp then
-			det_acc = 1;
-			det_resp_code = DET_CORRECT_TRIGGER + det_resp; # general trigger for wrong det response + pressed orientation (overwrite wrong if correct)
+		if (TRIAL_i[TRIAL_TYPE] == "valid") then
+			
+			if IMAGE_INDEX_TARGET[int(TRIAL_i[ORIS])] == det_resp then
+				det_acc = 1;
+				det_resp_code = DET_CORRECT_TRIGGER + det_resp; # general trigger for wrong det response + pressed orientation (overwrite wrong if correct)
+			end;
+			
 		end;
+			
 		
 		/* Send Manual Trigger */
 		
@@ -752,10 +758,10 @@ begin
 		string trial_ori_image = "0"; # preallocate the variable, if correct change the value
 		
 		if (TRIAL_i[TRIAL_TYPE] == "valid") then
-			trial_ori_image = IMAGE_NAMES[int(TRIAL_i[ORIS])];  # get the target image
+			trial_ori_image = IMAGE_NAMES_TARGET[int(TRIAL_i[ORIS])];  # get the target image
 		end;
 		
-		string det_image = IMAGE_NAMES[det_resp]; # get the det pressed image
+		string det_image = IMAGE_NAMES_DET[det_resp]; # get the det pressed image
 		
 		outfile.print(string(Participant) + " " + string(Age) + " " + Gender + " " + TRIAL_i[CUE] + " " + TRIAL_i[ORIS] + " " + trial_ori_image + " " + TRIAL_i[TRIAL_TYPE] + " " + string(probe_ori) + " " + TRIAL_i[CHANGE] + " " + 
 							string(probe_acc) + " " + string(probe_rt) + " " + probe_resp + " " + pas_resp + " " + string(pas_rt) + " " + string(det_resp)+ " " + det_image + " " + string(det_rt) + " " + string(det_acc) + "\n");
